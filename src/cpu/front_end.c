@@ -25,7 +25,13 @@ SOFTWARE.
 
 #include "front_end.h"
 
-FetchWidth instruction_fetch(FetchParam* fetch_param, int* inst_buf)
+FetchStatus instruction_fetch(FetchParam* fetch_param, int* inst_buf)
 {
-    return 0;
+    FetchStatus f_st = {
+        .inst_num = 0,
+        .err_id = 0,
+        .err_address = 0,
+        .cause = 0
+    };
+    return f_st;
 }

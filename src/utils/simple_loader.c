@@ -22,36 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef __BACKEND_H_
-    #define __BACKEND_H_
-
-#include <stdint.h>
-#include "cpu_config.h"
-#include "front_end.h"
-
-typedef struct exe_param
-{
-    uint64_t iid;           //当前执行到第几条指令
-    uint64_t pc;            //当前的PC值
-    InstSet  inst_set;       //指令集：16，32，64
-    FetchStatus fetch_status;
-    uint32_t* fetch_data_buf;
-}ExeParam;
+// 简单的程序加载器，在OS准备好之前，执行程序加载的功能
+// 加载简单的 自定义的程序
+// 程序文本应包括：
+//     1. 加载地址
+//     2. 程序入口
+//     3. 程序段，text
+//     4. 数据段，包括 rodata/data/bss
+// loader还需要负责将其中的bss段初始化
 
 
-typedef struct execute_status
-{
-    uint8_t  redirect;
-    // 0: No redirect
-    // 1: normal redirect
-    // 2: exit virtual machine
-    uint64_t next_pc;
-    uint64_t curr_pc;
-    uint64_t exception_id;
-    uint64_t address;
-    uint64_t cause;
-} ExeStatus;
-
-ExeStatus instruction_execute(ExeParam* exe_param);
-
-#endif //__BACKEND_H_

@@ -27,16 +27,24 @@ SOFTWARE.
     #define __FRONT_END_H__
 
 #include <stdint.h>
-#include "cpu.h"
-
+#include "cpu_config.h"
 
 typedef struct inst_fetch_param
 {
     uint64_t iid;           //当前执行到第几条指令
     uint64_t pc;            //当前的PC值
     InstSet inst_set;       //指令集：16，32，64
-    FetchWidth max_inst_num;
+    FetchWidth max_inst_num; // 最大取指数
 } FetchParam;
+
+// 用于记录取指过程中发生的错误
+typedef struct fetch_status
+{
+    FetchWidth inst_num;
+    uint64_t err_id;  // if no err, this is 0
+    uint64_t err_address;
+    uint64_t cause;
+} FetchStatus;
 
 
 // 输入：
@@ -45,7 +53,10 @@ typedef struct inst_fetch_param
 // 输出 （unsigned int）：成功取指的数量
 //  0：取指失败
 //  other: 取指成功
-FetchWidth instruction_fetch(FetchParam* fetch_param, int* inst_buf);
+FetchStatus instruction_fetch(FetchParam* fetch_param, int* inst_buf);
+
+
+
 
 
 #endif //__FRONT_END_H__

@@ -22,36 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef __BACKEND_H_
-    #define __BACKEND_H_
+#ifndef __SIMPLE_LOADER_H__
+    #define __SIMPLE_LOADER_H__
 
-#include <stdint.h>
-#include "cpu_config.h"
-#include "front_end.h"
-
-typedef struct exe_param
-{
-    uint64_t iid;           //当前执行到第几条指令
-    uint64_t pc;            //当前的PC值
-    InstSet  inst_set;       //指令集：16，32，64
-    FetchStatus fetch_status;
-    uint32_t* fetch_data_buf;
-}ExeParam;
-
-
-typedef struct execute_status
-{
-    uint8_t  redirect;
-    // 0: No redirect
-    // 1: normal redirect
-    // 2: exit virtual machine
-    uint64_t next_pc;
-    uint64_t curr_pc;
-    uint64_t exception_id;
-    uint64_t address;
-    uint64_t cause;
-} ExeStatus;
-
-ExeStatus instruction_execute(ExeParam* exe_param);
-
-#endif //__BACKEND_H_
+#endif //__SIMPLE_LOADER_H__

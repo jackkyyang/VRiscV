@@ -24,15 +24,8 @@ SOFTWARE.
 
 #ifndef __CPU_H__
     #define __CPU_H__
-#include <stdint.h>
-
-typedef enum {
-    I16 = 1,
-    I32 = 2,
-    I64 = 3
-} InstSet;
-
-typedef uint8_t FetchWidth;
 
 
-#endif // __CPU_STATE_H__
+int cpu_start();
+
+#endif //__CPU_H__
