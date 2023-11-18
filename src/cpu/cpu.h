@@ -27,6 +27,6 @@ SOFTWARE.
 
 #include <stdint.h>
 
-int cpu_start(uint64_t TIME_OUT);
+uint64_t cpu_start(uint64_t TIME_OUT);
 
 #endif //__CPU_H__

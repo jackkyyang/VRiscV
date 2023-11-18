@@ -63,7 +63,7 @@ static void cpu_init()
     exe_param.fetch_data_buf = fetch_data_buf;
 }
 
-int cpu_start(uint64_t TIME_OUT){
+uint64_t cpu_start(uint64_t TIME_OUT){
     cpu_init();
     FetchStatus f_st;
     ExeStatus e_st;
@@ -71,9 +71,9 @@ int cpu_start(uint64_t TIME_OUT){
     {
         // TimeOut 保护
         if(iid == TIME_OUT){
-            printf("CPU timeout! Total Instruction Number: %d\n",iid);
-            printf("current PC: %x\n",e_st.curr_pc);
-            return 1;
+            printf("CPU timeout! Total Instruction Number: %lu\n",iid);
+            printf("current PC: %lx\n",e_st.curr_pc);
+            break;
         }
 
         // Front End process
@@ -86,6 +86,7 @@ int cpu_start(uint64_t TIME_OUT){
         if (e_st.redirect == 2){ // normal exit
             //临时处理，后面都在 exception report中处理
             printf("Execution End!");
+            iid +=1;
             break;
         }
 
@@ -93,5 +94,5 @@ int cpu_start(uint64_t TIME_OUT){
         iid +=1;
         pc = e_st.next_pc;
     }
-    return 0;
+    return iid;
 }
