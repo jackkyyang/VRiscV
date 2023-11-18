@@ -22,10 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// Function: Entry Point into virtual machine
+#include <stdio.h>
+#include "src/cpu/cpu.h"
 
 
+int main(int argc, char* argv[]){
 
-
-
-
+    cpu_start(100);
+    return 0;
+}

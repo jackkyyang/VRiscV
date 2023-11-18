@@ -31,8 +31,6 @@ SOFTWARE.
 #include "back_end.h"
 
 // ----------------------------------------------
-// 定义通用寄存器
-static uint64_t x[32]; // 通用寄存器
 // 定义PC
 static uint64_t pc;
 // ----------------------------------------------
@@ -43,16 +41,6 @@ static FetchParam fetch_param;
 static ExeParam exe_param;
 // ----------------------------------------------
 static uint32_t fetch_data_buf [FETCH_NUM]; // 指令缓存
-
-// ----------------------------------------------
-static void init_register(){
-    // 初始化通用寄存器
-    for (int i = 0; i < 32; i++)
-    {
-        x[i] = i;
-    }
-    // 初始化PC
-}
 
 static inline void update_fetch_param(){
     fetch_param.iid = iid;
@@ -69,35 +57,33 @@ static void cpu_init()
 {
     pc = RESET_ADDR;
     iid = 1;
-    init_register();
     fetch_param.max_inst_num = FETCH_NUM;
     fetch_param.inst_set = INST_SET;
     exe_param.inst_set = INST_SET;
-    exe_param.fetch_data_buf = &fetch_data_buf;
+    exe_param.fetch_data_buf = fetch_data_buf;
 }
 
-int cpu_start(){
+int cpu_start(uint64_t TIME_OUT){
     cpu_init();
     FetchStatus f_st;
     ExeStatus e_st;
     while (1)
     {
         // TimeOut 保护
-        if(iid == CPU_TIME_OUT){
+        if(iid == TIME_OUT){
+            printf("CPU timeout! Total Instruction Number: %d\n",iid);
+            printf("current PC: %x\n",e_st.curr_pc);
             return 1;
         }
 
         // Front End process
         update_fetch_param();
-        f_st = instruction_fetch(&fetch_param,&fetch_data_buf);
+        f_st = instruction_fetch(&fetch_param,fetch_data_buf);
         // Back End process
         update_exe_param(f_st);
         e_st = instruction_execute(&exe_param);
-
-        if (e_st.exception_id != 0){ // exception report
-            printf("Run-time exception happened!");
-            return 2;
-        } else if (e_st.redirect == 2){ // normal exit
+        // 处理 各种error
+        if (e_st.redirect == 2){ // normal exit
             //临时处理，后面都在 exception report中处理
             printf("Execution End!");
             break;

@@ -53,7 +53,7 @@ typedef struct fetch_status
 // 输出 （unsigned int）：成功取指的数量
 //  0：取指失败
 //  other: 取指成功
-FetchStatus instruction_fetch(FetchParam* fetch_param, int* inst_buf);
+FetchStatus instruction_fetch(FetchParam* fetch_param, uint32_t* inst_buf);
 
 
 
