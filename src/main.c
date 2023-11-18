@@ -23,11 +23,36 @@ SOFTWARE.
 */
 
 #include <stdio.h>
-#include "src/cpu/cpu.h"
+#include <time.h>
+
+#include "cpu/cpu.h"
+
+void print_localtime(){
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    printf("--------------------------------\n");
+    printf("Local Time: %s", asctime(t));
+    printf("--------------------------------\n");
+}
 
 
 int main(int argc, char* argv[]){
 
-    cpu_start(100);
+    clock_t begin, end;
+    double time_cost;
+    uint64_t INST_NUM = 100;
+    int ips = 0;
+    print_localtime();
+    begin = clock();
+    cpu_start(INST_NUM);
+    end = clock();
+    time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
+    ips = INST_NUM/(int)(time_cost);
+    printf("--------------------------------\n");
+    printf("%d Instructions Simulated!\n",INST_NUM);
+    printf("Time Cost: %f\n",time_cost);
+    printf("Instruction Number Per Second: %d\n",ips);
+    printf("--------------------------------\n");
+
     return 0;
 }
