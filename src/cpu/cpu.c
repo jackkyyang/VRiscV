@@ -56,7 +56,7 @@ static inline void update_exe_param(FetchStatus f_st){
 static void cpu_init()
 {
     pc = RESET_ADDR;
-    iid = 1;
+    iid = 0;
     fetch_param.max_inst_num = FETCH_NUM;
     fetch_param.inst_set = INST_SET;
     exe_param.inst_set = INST_SET;
