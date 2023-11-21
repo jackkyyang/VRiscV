@@ -1,0 +1,42 @@
+
+
+# RV32译码表
+
+ISA = "RV32"
+XLEN = 32
+
+[CONST]
+OP-32   = "0b011_0011"
+LOAD    = "0b000_0011"
+STORE   = "0b010_0011"
+OP-IMM  = "0b001_0011"
+SYSTEM  = "0b111_0011"
+MISC-MEM= "0b000_1111"
+BRANCH  = "0b110_0011"
+JAL     = "0b110_1111"
+JALR    = "0b110_0111"
+LUI     = "0b011_0111"
+AUIPC   = "0b001_0111"
+MULDIV  = "0b000_0001" # func7
+
+[field]     # R 指令的feild不会随指令变化
+opcode  = [0,1,2,3,4,5,6]
+rd      = [7,8,9,10,11]
+func3   = [12,13,14]
+rs1     = [15,16,17,18,19]
+rs2     = [20,21,22,23,24]
+func7   = [25,26,27,28,29,30,31]
+
+[extensions]
+[extensions.I.alu]
+extract = ["rd","rs1","rs2"]
+op.add = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b000"}
+op.sub = {opcode = "OP-32", func7 = "0b010_0000", func3 = "0b000"}
+op.sll = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b001"}
+op.slt = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b010"}
+op.sltu= {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b011"}
+op.xor = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b100"}
+op.srl = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b101"}
+op.sra = {opcode = "OP-32", func7 = "0b010_0000", func3 = "0b101"}
+op.or  = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b110"}
+op.and = {opcode = "OP-32", func7 = "0b000_0000", func3 = "0b111"}
