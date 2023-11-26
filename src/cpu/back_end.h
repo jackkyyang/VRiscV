@@ -54,4 +54,33 @@ typedef struct execute_status
 
 ExeStatus instruction_execute(ExeParam* exe_param);
 
+// op
+#define OP_32     0b00110011
+#define LOAD      0b00000011
+#define STORE     0b00100011
+#define OP_IMM    0b00010011
+#define SYSTEM    0b01110011
+#define MISC_MEM  0b00001111
+#define BRANCH    0b01100011
+#define JAL       0b01101111
+#define JALR      0b01100111
+#define LUI       0b00110111
+#define AUIPC     0b00010111
+// func7
+#define MULDIV    0b00000001
+
+typedef struct exe_flags
+{
+    uint8_t is_branch;
+    uint8_t is_jump;
+    uint8_t is_alu;
+    uint8_t is_mul;
+    uint8_t is_div;
+    uint8_t is_shift;
+    uint8_t is_cmp;
+    uint8_t is_csr;
+    uint8_t is_store;
+    uint8_t is_load;
+}ExeFlags;
+
 #endif //__BACKEND_H_

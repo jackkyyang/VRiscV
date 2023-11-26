@@ -1,0 +1,128 @@
+# ----------------------------------------------------------------------------------------
+# MIT License
+#
+# Copyright (c) 2023 jackkyyang
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# ------------------------------------------------------------------------------------------
+
+
+ISA = "RV32"
+XLEN = 32
+
+[CONST]
+OP_32   = 0b011_0011
+LOAD    = 0b000_0011
+STORE   = 0b010_0011
+OP_IMM  = 0b001_0011
+SYSTEM  = 0b111_0011
+MISC_MEM= 0b000_1111
+BRANCH  = 0b110_0011
+JAL     = 0b110_1111
+JALR    = 0b110_0111
+LUI     = 0b011_0111
+AUIPC   = 0b001_0111
+MULDIV  = 0b000_0001 # func7
+
+# Format dec table
+[field]     # R指令的feild不会随指令变化
+opcode  = ["6:0"]
+rd      = ["11:7"]
+func3   = ["14:12"]
+rs1     = ["19:15"]
+rs2     = ["24:20"]
+func7   = ["31:25"]
+
+[I.alu]
+args = ["rd","rs1","rs2"]
+[I.alu.opcode]
+match = "OP_32"
+set_flags = ["r_type","is_op_32"]
+[I.alu.opcode.func7]
+match = ["0b000_0000","0b010_0000"]
+[I.alu.opcode.0b000_0000.func3]
+add = 0b000
+sll = 0b001
+slt = 0b010
+xor = 0b011
+srl = 0b011
+or = 0b011
+and = 0b011
+[alu_group.opcode.0b010_0000.func3]
+sub = 0b000
+sra = 0b101
+
+
+[I.alu_imm]
+field     = {imm = ["31:20"]}
+args = ["rd","rs1","imm"]
+[I.alu_imm.opcode]
+match = "OP_IMM"
+set_flags = ["i_type","is_alu"]
+[I.alu_imm.opcode.func3]
+addi  = 0b000
+slti  = 0b010
+sltiu = 0b011
+xori  = 0b100
+ori   = 0b110
+andi  = 0b111
+
+[I.shift_imm]
+field     = {imm = ["31:25"],shamt = ["24:20"]}
+args = ["rd","rs1","shamt"]
+[I.shift_imm.opcode]
+match = "OP_IMM"
+set_flags = ["i_type","is_shift"]
+[I.shift_imm.opcode.func3]
+match = ["0b001","0b101"]
+[I.shift_imm.opcode.0b001.imm]
+slli = 0b000_0000
+[I.shift_imm.opcode.0b101.imm]
+srli = 0b000_0000
+srai = 0b010_0000
+
+#----------------------- M extention ---------------------------
+[M.alu_mul]
+args = ["rd","rs1","rs2"]
+[M.alu_mul.opcode]
+match = "OP_32"
+set_flags = ["r_type","is_op_32"]
+[M.alu_mul.opcode.func7]
+match = "MULDIV"
+[M.alu_mul.opcode.func7.func3]
+# 没有match，是leaf节点
+mul = 0b000
+mulh = 0b001
+mulhsu = 0b010
+mulhu = 0b011
+
+
+[M.alu_div]
+args = ["rd","rs1","rs2"]
+[M.alu_div.opcode]
+match = "OP_32"
+set_flags = ["r_type","is_op_32"]
+[M.alu_div.opcode.func7]
+match = "MULDIV"
+[M.alu_div.opcode.func7.func3]
+# 没有match，是leaf节点
+div = 0b100
+divu = 0b101
+rem = 0b110
+remu = 0b111

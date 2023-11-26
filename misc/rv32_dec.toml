@@ -1,17 +1,40 @@
+# ----------------------------------------------------------------------------------------
+# MIT License
+#
+# Copyright (c) 2023 jackkyyang
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# ------------------------------------------------------------------------------------------
 
 
 # RV32译码表
-
+#TODO, 增加group decode字段，帮助加快decode和dispatch
 ISA = "RV32"
 XLEN = 32
 
 [CONST]
-OP-32   = 0b011_0011
+OP_32   = 0b011_0011
 LOAD    = 0b000_0011
 STORE   = 0b010_0011
-OP-IMM  = 0b001_0011
+OP_IMM  = 0b001_0011
 SYSTEM  = 0b111_0011
-MISC-MEM= 0b000_1111
+MISC_MEM= 0b000_1111
 BRANCH  = 0b110_0011
 JAL     = 0b110_1111
 JALR    = 0b110_0111
@@ -32,37 +55,37 @@ func7   = ["31:25"]
 [extensions.I.alu_2op]
 set_flag = ["r_type","is_alu"]
 out_field = ["rd","rs1","rs2"]
-op.add = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b000}
-op.sub = {opcode = "OP-32", func7 = 0b010_0000, func3 = 0b000}
-op.sll = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b001}
-op.slt = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b010}
-op.sltu= {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b011}
-op.xor = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b100}
-op.srl = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b101}
-op.sra = {opcode = "OP-32", func7 = 0b010_0000, func3 = 0b101}
-op.or  = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b110}
-op.and = {opcode = "OP-32", func7 = 0b000_0000, func3 = 0b111}
+op.add = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b000}
+op.sll = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b001}
+op.slt = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b010}
+op.sltu= {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b011}
+op.xor = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b100}
+op.srl = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b101}
+op.or  = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b110}
+op.and = {opcode = "OP_32", func7 = 0b000_0000, func3 = 0b111}
+op.sub = {opcode = "OP_32", func7 = 0b010_0000, func3 = 0b000}
+op.sra = {opcode = "OP_32", func7 = 0b010_0000, func3 = 0b101}
 
 [extensions.I.alu_1op]
 set_flag  = ["i_type","is_alu"]
 field     = {imm = ["31:20"]}
 imm_offset= 0
 out_field = ["rd","rs1","imm"]
-op.addi   = {opcode = "OP-IMM",func3 = 0b000}
-op.slti   = {opcode = "OP-IMM",func3 = 0b001}
-op.sltiu  = {opcode = "OP-IMM",func3 = 0b010}
-op.xori   = {opcode = "OP-IMM",func3 = 0b100}
-op.ori    = {opcode = "OP-IMM",func3 = 0b110}
-op.andi   = {opcode = "OP-IMM",func3 = 0b111}
+op.addi   = {opcode = "OP_IMM",func3 = 0b000}
+op.slti   = {opcode = "OP_IMM",func3 = 0b010}
+op.sltiu  = {opcode = "OP_IMM",func3 = 0b011}
+op.xori   = {opcode = "OP_IMM",func3 = 0b100}
+op.ori    = {opcode = "OP_IMM",func3 = 0b110}
+op.andi   = {opcode = "OP_IMM",func3 = 0b111}
 
 [extensions.I.shift_imm]
 set_flag  = ["i_type","is_alu"]
 field     = {imm = ["31:25"],shamt = ["24:20"]}
 imm_offset= 0
 out_field = ["rd","rs1","shamt"]
-op.slli   = {opcode = "OP-IMM",func3 = 0b001,imm = 0b000_0000}
-op.srli   = {opcode = "OP-IMM",func3 = 0b101,imm = 0b000_0000}
-op.srai   = {opcode = "OP-IMM",func3 = 0b101,imm = 0b010_0000}
+op.slli   = {opcode = "OP_IMM",func3 = 0b001,imm = 0b000_0000}
+op.srli   = {opcode = "OP_IMM",func3 = 0b101,imm = 0b000_0000}
+op.srai   = {opcode = "OP_IMM",func3 = 0b101,imm = 0b010_0000}
 
 
 [extensions.I.cond_br]
@@ -73,7 +96,7 @@ out_field = ["rs1","rs2","imm"]
 op.beq    = {opcode = "BRANCH", func3 = 0b000}
 op.bne    = {opcode = "BRANCH", func3 = 0b001}
 op.blt    = {opcode = "BRANCH", func3 = 0b100}
-op.bge    = {opcode = "BRANCH", func3 = 0b100}
+op.bge    = {opcode = "BRANCH", func3 = 0b101}
 op.bltu   = {opcode = "BRANCH", func3 = 0b110}
 op.bgeu   = {opcode = "BRANCH", func3 = 0b111}
 
@@ -122,7 +145,7 @@ op.auipc  = {opcode = "AUIPC"}
 [extensions.I.uop]
 set_flag  = ["i_type"]
 field     = {imm = ["31:20"]}
-op.uop    = {opcode = "OP-IMM",func3 = 0b000,imm = 0b0000_0000_0000,rs1 = 0b0_0000,rd = 0b0_0000}
+op.uop    = {opcode = "OP_IMM",func3 = 0b000,imm = 0b0000_0000_0000,rs1 = 0b0_0000,rd = 0b0_0000}
 
 [extensions.I.sys]
 set_flag  = ["i_type"]
@@ -134,9 +157,9 @@ op.ebreak = {opcode = "SYSTEM",func3 = 0b000,rs1 = 0b0_0000,rd = 0b0_0000,imm = 
 set_flag  = ["i_type"]
 field     = {succ = ["23:20"], pred = ["27:24"], fm = ["31:28"]}
 out_field = ["rd","rs1","succ","pred","fm"]
-op.fence  = {opcode = "MISC-MEM",func3 = 0b000}
-op.fence_tso = {opcode = "MISC-MEM",func3 = 0b000,rs1 = 0b0_0000,rd = 0b0_0000,succ=0b0011,pred=0b0011,fm=0b1000}
-op.pause     = {opcode = "MISC-MEM",func3 = 0b000,rs1 = 0b0_0000,rd = 0b0_0000,succ=0b0000,pred=0b0001,fm=0b0000}
+op.fence  = {opcode = "MISC_MEM",func3 = 0b000}
+op.fence_tso = {opcode = "MISC_MEM",func3 = 0b000,rs1 = 0b0_0000,rd = 0b0_0000,succ=0b0011,pred=0b0011,fm=0b1000}
+op.pause     = {opcode = "MISC_MEM",func3 = 0b000,rs1 = 0b0_0000,rd = 0b0_0000,succ=0b0000,pred=0b0001,fm=0b0000}
 
 
 
@@ -144,18 +167,18 @@ op.pause     = {opcode = "MISC-MEM",func3 = 0b000,rs1 = 0b0_0000,rd = 0b0_0000,s
 [extensions.M.mul]
 out_field = ["rd","rs1","rs2"]
 set_flag = ["r_type"]
-op.mul    = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b000}
-op.mulh   = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b001}
-op.mulhsu = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b010}
-op.mulhu  = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b011}
+op.mul    = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b000}
+op.mulh   = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b001}
+op.mulhsu = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b010}
+op.mulhu  = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b011}
 
 [extensions.M.div]
 out_field = ["rd","rs1","rs2"]
 set_flag = ["r_type"]
-op.div    = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b100}
-op.divu   = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b101}
-op.rem    = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b110}
-op.remu   = {opcode = "OP-32", func7 = "MULDIV", func3 = 0b111}
+op.div    = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b100}
+op.divu   = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b101}
+op.rem    = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b110}
+op.remu   = {opcode = "OP_32", func7 = "MULDIV", func3 = 0b111}
 
 
 #----------------------- zicsr extention ---------------------------
@@ -168,6 +191,6 @@ op.csrrw  = {opcode = "SYSTEM",func3 = 0b001}
 op.csrrs  = {opcode = "SYSTEM",func3 = 0b010}
 op.csrrc  = {opcode = "SYSTEM",func3 = 0b011}
 op.csrrwi = {opcode = "SYSTEM",func3 = 0b101}
-op.csrrsi = {opcode = "SYSTEM",func3 = 0b101}
-op.csrrci = {opcode = "SYSTEM",func3 = 0b101}
+op.csrrsi = {opcode = "SYSTEM",func3 = 0b110}
+op.csrrci = {opcode = "SYSTEM",func3 = 0b111}
 
