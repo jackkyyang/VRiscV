@@ -81,6 +81,7 @@ typedef struct exe_flags
     uint8_t is_csr;
     uint8_t is_store;
     uint8_t is_load;
+    uint8_t is_li;
 }ExeFlags;
 
 #endif //__BACKEND_H_
