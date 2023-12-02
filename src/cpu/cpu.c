@@ -61,6 +61,7 @@ static void cpu_init()
     fetch_param.inst_set = INST_SET;
     exe_param.inst_set = INST_SET;
     exe_param.fetch_data_buf = fetch_data_buf;
+    backend_init();
 }
 
 uint64_t cpu_start(uint64_t TIME_OUT){

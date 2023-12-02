@@ -27,6 +27,7 @@ SOFTWARE.
 #include <stdlib.h>
 
 #include "cpu/cpu.h"
+#include "dev/memory.h"
 
 void print_localtime(){
     time_t now = time(NULL);
@@ -69,6 +70,8 @@ int main(int argc, char* argv[]){
     if (TIME_OUT_NUM == 0){
         return 0;
     }
+
+    memory_init(DRAM128MB);
 
     print_localtime();
     begin = clock();

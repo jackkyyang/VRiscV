@@ -5,35 +5,75 @@
 
 // reg op
 static inline void mul(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+    if (rd != 0)
+        x[rd] = (r1 * r2);
 }
 
 static inline void mulh(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    int64_t r1 = (int64_t)(x[rs1]);
+    int64_t r2 = (int64_t)(x[rs2]);
+    if (rd != 0)
+        x[rd] = ((r1 * r2) & 0xffffffff00000000) >> 32;
 }
 
 static inline void mulhsu(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    int64_t r1 = (int64_t)(x[rs1]);
+    uint64_t r2 = (uint64_t)(x[rs2]);
+    if (rd != 0)
+        x[rd] = ((r1 * r2) & 0xffffffff00000000) >> 32;
 }
 
 static inline void mulhu(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    uint64_t r1 = (uint64_t)(x[rs1]);
+    uint64_t r2 = (uint64_t)(x[rs2]);
+    if (rd != 0)
+        x[rd] = ((r1 * r2) & 0xffffffff00000000) >> 32;
 }
 
 static inline void div(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+
+    if (r2 == 0)
+        x[rd] = 0xffffffffffffffff;
+    else if (r1 == 0x80000000 && r2 == -1)
+        x[rd] = 0x80000000;
+    else if (rd != 0)
+        x[rd] = r1/r2;
 }
 
 static inline void divu(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+
+    if (r2 == 0)
+        x[rd] = 0xffffffffffffffff;
+    else if (rd != 0)
+        x[rd] = r1/r2;
 }
 
 static inline void rem(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+
+    if (r2 == 0)
+        x[rd] = 0xffffffffffffffff;
+    else if (r1 == 0x80000000 && r2 == -1)
+        x[rd] = 0;
+    else if (rd != 0)
+        x[rd] = r1%r2;
 }
 
 static inline void remu(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+
+    if (r2 == 0)
+        x[rd] = 0xffffffffffffffff;
+    else if (rd != 0)
+        x[rd] = r1%r2;
 }
 
 static inline void add(uint8_t rd, uint8_t rs1, uint8_t rs2){

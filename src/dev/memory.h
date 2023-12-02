@@ -41,13 +41,19 @@ typedef struct mem_port
     uint8_t  port_width; // Port的宽度（byte数）
 } MemPort;
 
+void memory_init(uint64_t mem_size);
+void memory_free();
+
+#define DRAM1MB    (1<<20)
+#define DRAM128MB  DRAM1MB * 128
+
 // 主存读操作
 // addr: 读地址，无符号数，位宽为64 bits
 // byte_num：读取的（byte）数量
 // data_buf: 数据buf，由master指定
 // op_src: 操作来源
 // Return：0 失败，other：成功，且读数据的数量
-int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc* op_src, uint8_t* data_buf);
+int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_buf);
 
 // 主存写操作
 // addr: 写地址，无符号数，位宽为64 bits
@@ -55,6 +61,6 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc* op_src, uint8_t* data_b
 // data_buf: 数据buf，由master指定
 // op_src: 操作来源
 // Return：0 失败，other：成功，且写入数据的数量
-int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc* op_src, uint8_t* data_buf);
+int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_buf);
 
 #endif //__MEMORY_H__

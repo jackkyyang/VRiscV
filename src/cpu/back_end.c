@@ -35,13 +35,17 @@ SOFTWARE.
 static uint64_t x[32]; // 通用寄存器
 static uint64_t pc;
 static uint64_t next_pc;
+// Exceptions
+static ExcptInfo exception_info;
 // ----------------------------------------------
-static void init_register(){
+void backend_init(){
     // 初始化通用寄存器
     for (int i = 0; i < 32; i++)
     {
         x[i] = i;
     }
+    exception_info.exception_vaild = 0;
+    exception_info.exception_cause = 0;
 }
 
 // flags

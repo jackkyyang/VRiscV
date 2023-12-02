@@ -84,4 +84,12 @@ typedef struct exe_flags
     uint8_t is_li;
 }ExeFlags;
 
+typedef struct excpt_t
+{
+    uint8_t exception_vaild;
+    uint64_t exception_cause;
+} ExcptInfo;
+
+void backend_init();
+
 #endif //__BACKEND_H_
