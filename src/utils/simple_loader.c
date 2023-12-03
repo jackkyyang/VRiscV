@@ -28,22 +28,22 @@ void execve_(const char *file, char *argv[], char *envp[]) {
   Elf32_Ehdr *h = mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, fd, 0);
   assert(h != (void *)-1);
   // check the magic number
-  assert(h->e_ident[0]  = 0x7f &&
-         h->e_ident[1]  = 0x45 &&
-         h->e_ident[2]  = 0x4c &&
-         h->e_ident[3]  = 0x46 &&
-         h->e_ident[4]  = 0x01 &&
-         h->e_ident[5]  = 0x01 &&
-         h->e_ident[6]  = 0x01 &&
-         h->e_ident[7]  = 0x00 &&
-         h->e_ident[8]  = 0x00 &&
-         h->e_ident[9]  = 0x00 &&
-         h->e_ident[10] = 0x00 &&
-         h->e_ident[11] = 0x00 &&
-         h->e_ident[12] = 0x00 &&
-         h->e_ident[13] = 0x00 &&
-         h->e_ident[14] = 0x00 &&
-         h->e_ident[15] = 0x00);
+  assert(h->e_ident[0]  == 0x7f &&
+         h->e_ident[1]  == 0x45 &&
+         h->e_ident[2]  == 0x4c &&
+         h->e_ident[3]  == 0x46 &&
+         h->e_ident[4]  == 0x01 &&
+         h->e_ident[5]  == 0x01 &&
+         h->e_ident[6]  == 0x01 &&
+         h->e_ident[7]  == 0x00 &&
+         h->e_ident[8]  == 0x00 &&
+         h->e_ident[9]  == 0x00 &&
+         h->e_ident[10] == 0x00 &&
+         h->e_ident[11] == 0x00 &&
+         h->e_ident[12] == 0x00 &&
+         h->e_ident[13] == 0x00 &&
+         h->e_ident[14] == 0x00 &&
+         h->e_ident[15] == 0x00);
   assert(h->e_type == ET_EXEC && h->e_machine == EM_RISCV);
 
   // 根据 Program header table file offset，拿到program header table的地址

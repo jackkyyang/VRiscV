@@ -163,7 +163,6 @@ void mem_pool_init()
     mem_pool_size = 0;
     l2_table_size = 0;
     l3_table_size = 0;
-    return 0;
 }
 
 void l3_table_free(L3Entry *l3_table){
@@ -203,7 +202,6 @@ void mem_pool_free()
 {
     // 遍历内存池，销毁所有内存对象，并将所有表项清空
     l1_table_free();
-    return 0;
 }
 
 uint64_t get_mem_pool_size()

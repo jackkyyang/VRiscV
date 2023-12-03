@@ -96,7 +96,11 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_bu
     MCheck mem_check = addr_check(addr,byte_num,op_src);
     uint8_t *rd_ptr = get_mem_ptr(addr);
 
-    assert((mem_check.byte_num + mem_check.across_offset + 1) == byte_num);
+    if (mem_check.across_page)
+    {
+        assert((mem_check.byte_num + mem_check.across_offset + 1) == byte_num);
+    }
+
 
     if (byte_num == 0 || rd_ptr==NULL)
         return 0;
@@ -127,7 +131,10 @@ int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_b
     MCheck mem_check = addr_check(addr,byte_num,op_src);
     uint8_t *wr_ptr = get_mem_ptr(addr);
 
-    assert((mem_check.byte_num + mem_check.across_offset + 1) == byte_num);
+    if (mem_check.across_page)
+    {
+        assert((mem_check.byte_num + mem_check.across_offset + 1) == byte_num);
+    }
 
     if (byte_num == 0 || wr_ptr==NULL)
         return 0;
