@@ -113,6 +113,7 @@ static L3Entry* create_l3_table(L2Entry* l2_table){
 static uint8_t* add_new_mem(){
     uint8_t* new_mem = (uint8_t*)malloc(sizeof(uint8_t)*ENTRY_SIZE);
     mem_pool_size += 1;
+    return new_mem;
 }
 
 uint8_t *mem_pool_lkup(uint64_t addr)
@@ -129,7 +130,7 @@ uint8_t *mem_pool_lkup(uint64_t addr)
         if (l2_table[l2_addr].valid)                        // L2 table hit
         {
             l3_table = l2_table[l2_addr].l3_table;          // 拿到L3 TABLE
-            if (l3_table[l3_addr].valid = 0)                // L3 table miss
+            if (l3_table[l3_addr].valid == 0)                // L3 table miss
             {
                 l3_table[l3_addr].addr = add_new_mem();
                 l3_table[l3_addr].valid = 1;
