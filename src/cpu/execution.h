@@ -2,6 +2,8 @@
     #define __EXECUTION_H__
 
 #include <stdint.h>
+#include <assert.h>
+#include "../dev/memory.h"
 
 // reg op
 static inline void mul(uint8_t rd, uint8_t rs1, uint8_t rs2){
@@ -205,55 +207,256 @@ static inline void uop(){
 }
 // conditional branch
 static inline void beq(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+
+    if (r1 == r2)
+    {
+        int32_t abs_imm = - imm;
+        br_taken_cnt +=1;
+        if (imm > 0)
+            next_pc = (uint32_t)(pc + (uint64_t)(imm));
+        else
+            next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+    } else {
+        next_pc = (uint32_t)(pc + 4);
+    }
+
 }
 static inline void bne(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+
+    if (r1 != r2)
+    {
+        int32_t abs_imm = - imm;
+        br_taken_cnt +=1;
+        if (imm > 0)
+            next_pc = (uint32_t)(pc + (uint64_t)(imm));
+        else
+            next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+    } else {
+        next_pc = (uint32_t)(pc + 4);
+    }
 }
 static inline void blt(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+
+    if (r1 < r2)
+    {
+        int32_t abs_imm = - imm;
+        br_taken_cnt +=1;
+        if (imm > 0)
+            next_pc = (uint32_t)(pc + (uint64_t)(imm));
+        else
+            next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+    } else {
+        next_pc = (uint32_t)(pc + 4);
+    }
 }
 static inline void bgt(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    int32_t r1 = (int32_t)(x[rs1]);
+    int32_t r2 = (int32_t)(x[rs2]);
+
+    if (r1 >= r2)
+    {
+        int32_t abs_imm = - imm;
+        br_taken_cnt +=1;
+        if (imm > 0)
+            next_pc = (uint32_t)(pc + (uint64_t)(imm));
+        else
+            next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+    } else {
+        next_pc = (uint32_t)(pc + 4);
+    }
 }
 static inline void bltu(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+    if (r1 < r2)
+    {
+        int32_t abs_imm = - imm;
+        br_taken_cnt +=1;
+        if (imm > 0)
+            next_pc = (uint32_t)(pc + (uint64_t)(imm));
+        else
+            next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+    } else {
+        next_pc = (uint32_t)(pc + 4);
+    }
 }
 static inline void bgeu(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+
+    if (r1 >= r2)
+    {
+        int32_t abs_imm = - imm;
+        br_taken_cnt +=1;
+        if (imm > 0)
+            next_pc = (uint32_t)(pc + (uint64_t)(imm));
+        else
+            next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+    } else {
+        next_pc = (uint32_t)(pc + 4);
+    }
 }
 // unconditional branch
 static inline void jal(uint8_t rd, int32_t imm){
-    ;
+
+    int32_t abs_imm = - imm;
+    if (imm > 0)
+        next_pc = (uint32_t)(pc + (uint64_t)(imm));
+    else
+        next_pc = (uint32_t)(pc - (uint64_t)(abs_imm));
+
+    if (rd != 0)
+        x[rd] = (uint32_t)(pc + 4);
+
 }
 static inline void jalr(uint8_t rd, uint8_t rs1, int32_t imm){
-    ;
+    int32_t abs_imm = - imm;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    if (imm > 0)
+        next_pc = ((uint32_t)(r1 + (uint32_t)(imm))) & 0xfffffffe;
+    else
+        next_pc = ((uint32_t)(r1 - (uint32_t)(abs_imm))) & 0xfffffffe;
+
+    if (rd != 0)
+        x[rd] = (uint32_t)(pc + 4);
 }
 // load
 static inline void lb(uint8_t rd, uint8_t rs1, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    int32_t abs_imm = (-imm);
+    uint8_t rd_data;
+    uint64_t addr;
+    if (imm>0)
+    {
+        addr =  (uint64_t)(r1 + imm);
+    } else {
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+    }
+
+    int read_num = read_data(addr,1,CPU_BE,&rd_data);
+    assert(read_num == 1); // load指令必须有数据返回
+    if (rd != 0)
+        x[rd] = (int32_t)(rd_data);
+
 }
 static inline void lh(uint8_t rd, uint8_t rs1, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    int32_t abs_imm = (-imm);
+    uint16_t rd_data;
+    uint64_t addr;
+    if (imm>0)
+        addr =  (uint64_t)(r1 + imm);
+    else
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+
+    int read_num = read_data(addr,2,CPU_BE,(uint8_t*)(&rd_data));
+    assert(read_num == 2); // load指令必须有数据返回
+    if (rd != 0) {
+        x[rd] = (int32_t)(rd_data);
+    }
 }
 static inline void lw(uint8_t rd, uint8_t rs1, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    int32_t abs_imm = (-imm);
+    int32_t rd_data;
+    uint64_t addr;
+    if (imm>0)
+        addr =  (uint64_t)(r1 + imm);
+    else
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+
+    int read_num = read_data(addr,4,CPU_BE,(uint8_t*)(&rd_data));
+    assert(read_num == 4); // load指令必须有数据返回
+    if (rd != 0) {
+        x[rd] = rd_data;
+    }
 }
 static inline void lbu(uint8_t rd, uint8_t rs1, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    int32_t abs_imm = (-imm);
+    uint8_t rd_data;
+    uint64_t addr;
+    if (imm>0)
+    {
+        addr =  (uint64_t)(r1 + imm);
+    } else {
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+    }
+
+    int read_num = read_data(addr,1,CPU_BE,&rd_data);
+    assert(read_num == 1); // load指令必须有数据返回
+    if (rd != 0)
+        x[rd] = (uint32_t)(rd_data);
 }
 static inline void lhu(uint8_t rd, uint8_t rs1, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    int32_t abs_imm = (-imm);
+    uint16_t rd_data;
+    uint64_t addr;
+    if (imm>0)
+        addr =  (uint64_t)(r1 + imm);
+    else
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+
+    int read_num = read_data(addr,2,CPU_BE,(uint8_t*)(&rd_data));
+    assert(read_num == 2); // load指令必须有数据返回
+    if (rd != 0) {
+        x[rd] = (uint32_t)(rd_data);
+    }
 }
 //store
 static inline void sb(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+    uint8_t wr_data = (uint8_t)r2;
+    int32_t abs_imm = (-imm);
+    uint64_t addr;
+    if (imm>0)
+    {
+        addr =  (uint64_t)(r1 + imm);
+    } else {
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+    }
+
+    int write_num = write_data(addr,1,CPU_BE,&wr_data);
+    assert(write_num == 1); // write指令必须有数据返回
 }
 static inline void sh(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+    uint8_t wr_data[2] = {(uint8_t)r2,(uint8_t)(r2 >> 8)};
+    int32_t abs_imm = (-imm);
+    uint64_t addr;
+    if (imm>0)
+    {
+        addr =  (uint64_t)(r1 + imm);
+    } else {
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+    }
+
+    int write_num = write_data(addr,2,CPU_BE,wr_data);
+    assert(write_num == 1); // write指令必须有数据返回
 }
 static inline void sw(uint8_t rs1, uint8_t rs2, int32_t imm){
-    ;
+    uint32_t r1 = (uint32_t)(x[rs1]);
+    uint32_t r2 = (uint32_t)(x[rs2]);
+    int32_t abs_imm = (-imm);
+    uint64_t addr;
+    if (imm>0)
+    {
+        addr =  (uint64_t)(r1 + imm);
+    } else {
+        addr =  (uint64_t)(r1 - (uint32_t)abs_imm);
+    }
+
+    int write_num = write_data(addr,4,CPU_BE,(uint8_t*)(&r2));
+    assert(write_num == 1); // write指令必须有数据返回
 }
 // load imme
 static inline void lui(uint8_t rd, int32_t imm){
@@ -266,7 +469,7 @@ static inline void auipc(uint8_t rd, int32_t imm){
         if (imm > 0)
             x[rd] = (uint32_t)(pc + (uint64_t)(imm));
         else
-            x[rd] = (uint32_t)((int32_t)(pc) - abs_imm);
+            x[rd] = (uint32_t)(pc - (uint64_t)(abs_imm));
 }
 // system
 static inline void ecall(){

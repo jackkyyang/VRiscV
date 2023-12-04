@@ -50,6 +50,9 @@ void backend_init(){
 
 // flags
 static ExeFlags flags;
+uint64_t jmp_cnt;
+uint64_t br_cnt;
+uint64_t br_taken_cnt;
 static void clear_flags(){
     memset(&flags, 0, sizeof(ExeFlags));
 }

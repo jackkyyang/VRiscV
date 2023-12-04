@@ -124,6 +124,7 @@ void decode(uint32_t inst){
                               ((int32_t)(inst & 0b10000000000000000000000000000000) >> 19);
 
         flags.is_branch=1;
+        br_cnt +=1;
 
         if (func3 == 0b000)
             beq(rs1,rs2,branch_imm);
@@ -147,12 +148,14 @@ void decode(uint32_t inst){
                           ((int32_t)(inst & 0b10000000000000000000000000000000) >> 11);
 
         flags.is_jump = 1;
+        jmp_cnt +=1;
 
         jal(rd,jal_imm);
     }
     else if (opcode == JALR && func3 == 0b000)
     {
         flags.is_jump = 1;
+        jmp_cnt +=1;
         jalr(rd,rs1,imm);
     }
     else if (opcode == LOAD)
