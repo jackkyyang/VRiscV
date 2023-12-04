@@ -473,7 +473,7 @@ static inline void auipc(uint8_t rd, int32_t imm){
 }
 // system
 static inline void ecall(){
-    ;
+    exception_info.exception_vaild = 1;
 }
 static inline void ebreak(){
     ;

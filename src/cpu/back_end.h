@@ -82,6 +82,7 @@ typedef struct exe_flags
     uint8_t is_store;
     uint8_t is_load;
     uint8_t is_li;
+    uint8_t is_sys;
 }ExeFlags;
 
 typedef struct excpt_t

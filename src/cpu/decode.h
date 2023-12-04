@@ -203,7 +203,7 @@ void decode(uint32_t inst){
     }
     else if (opcode == SYSTEM)
     {
-
+        flags.is_sys = 1;
         if (func3 >0b000)
             flags.is_csr = 1;
 
