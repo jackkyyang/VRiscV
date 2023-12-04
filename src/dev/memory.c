@@ -98,7 +98,7 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_bu
 
     if (mem_check.across_page)
     {
-        assert((mem_check.byte_num + mem_check.across_offset + 1) == byte_num);
+        assert((mem_check.byte_num + mem_check.across_offset) == byte_num);
     }
 
 
@@ -133,7 +133,7 @@ int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_b
 
     if (mem_check.across_page)
     {
-        assert((mem_check.byte_num + mem_check.across_offset + 1) == byte_num);
+        assert((mem_check.byte_num + mem_check.across_offset) == byte_num);
     }
 
     if (byte_num == 0 || wr_ptr==NULL)
