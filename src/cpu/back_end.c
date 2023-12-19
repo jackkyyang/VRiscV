@@ -29,6 +29,7 @@ SOFTWARE.
 #include "cpu_config.h"
 #include "front_end.h"
 #include "back_end.h"
+#include "sys_reg.h"
 
 
 // 定义通用寄存器
@@ -78,6 +79,8 @@ ExeStatus instruction_execute(ExeParam *exe_param)
     } else {
         e_st.next_pc = pc + 4;
     }
+
+    instreth_inc(FETCH_NUM);
 
     return e_st;
 }

@@ -476,10 +476,15 @@ static inline void ecall(){
     exception_info.exception_vaild = 1;
 }
 static inline void ebreak(){
-    ;
+    uop();
 }
 static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
-    ;
+    uint32_t read_data;
+    if (rd == 0)
+    {
+        csr()
+    }
+
 }
 static inline void csrrs(uint8_t rd, uint8_t rs1, uint32_t csr){
     ;
@@ -498,16 +503,17 @@ static inline void csrrci(uint8_t rd, uint8_t rs1, uint32_t csr){
 }
 // misc mem
 static inline void fence_tso(){
-    ;
+    uop();
 }
 static inline void pause(){
-    ;
+    uop();
 }
 static inline void fence(uint8_t rd, uint8_t rs1, uint8_t succ,uint8_t pred,uint8_t fm){
-    ;
+    uop();
 }
 // Undefined
 static inline void undef(){
-    ;
+    exception_info.exception_vaild = 1;
+
 }
 #endif //__EXECUTION_H__
