@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "../include/comm.h"
 #include "mem_pool.h"
 
 #define ALIGN32_L1(addr) ((addr & (0xf0000000)) >> 28)

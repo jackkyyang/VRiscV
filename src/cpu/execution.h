@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "../dev/memory.h"
 #include "sys_reg.h"
+#include "../include/comm.h"
 
 // reg op
 static inline void mul(uint8_t rd, uint8_t rs1, uint8_t rs2){
@@ -487,7 +488,7 @@ static inline void wfi(){
 }
 static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
     uint32_t read_data;
-    CSRFeild *csr_id = (CSRFeild *) &csr;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
     if (rd == 0) // 只读取不写入
     {
         csr_read(csr,&read_data);

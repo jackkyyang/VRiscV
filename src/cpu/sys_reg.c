@@ -27,6 +27,7 @@ SOFTWARE.
 #include "cpu_glb.h"
 #include "../dev/clock.h"
 #include "cpu_config.h"
+#include "../include/comm.h"
 
 //---------------------------------
 // M mode csr registers
@@ -452,7 +453,8 @@ static uint32_t instreth() {
 #endif
 
 static uint64_t hpmcounter(int no){
-    if (!PICK_BIT(no,mcounteren))
+    uint32_t counten = STRUCT2INT(uint32_t,mcounteren);
+    if (!PICK_BIT(no,counten))
     {
         // TODO, raise_iinstr_excp(XXX);
         return 0;
@@ -582,10 +584,10 @@ int csr_read(uint32_t csr, MXLEN_T *rdptr){
 
     // Machine Trap Setup
     case 0x300:
-        *rdptr = (MXLEN_T)mstatus;
+        *rdptr = STRUCT2INT(MXLEN_T,mstatus);
         break;
     case 0x301:
-        *rdptr = (MXLEN_T)misa;
+        *rdptr = STRUCT2INT(MXLEN_T,misa);
         break;
     case 0x302:
         *rdptr = 0; // medeleg
@@ -594,16 +596,16 @@ int csr_read(uint32_t csr, MXLEN_T *rdptr){
         *rdptr = 0; // mideleg
         break;
     case 0x304:
-        *rdptr = (MXLEN_T)mie;
+        *rdptr = STRUCT2INT(MXLEN_T,mie);
         break;
     case 0x305:
-        *rdptr = (MXLEN_T)mtvec;
+        *rdptr = STRUCT2INT(MXLEN_T,mtvec);
         break;
     case 0x306:
-        *rdptr = (MXLEN_T)mcounteren;
+        *rdptr = STRUCT2INT(MXLEN_T,mcounteren);
         break;
     case 0x310:
-        *rdptr = (MXLEN_T)mstatush;
+        *rdptr = STRUCT2INT(MXLEN_T,mstatush);
         break;
     // Machine Trap Handling
     case 0x340:
@@ -613,13 +615,13 @@ int csr_read(uint32_t csr, MXLEN_T *rdptr){
         *rdptr = (MXLEN_T)mepc;
         break;
     case 0x342:
-        *rdptr = (MXLEN_T)mcause;
+        *rdptr = STRUCT2INT(MXLEN_T,mcause);
         break;
     case 0x343:
         *rdptr = (MXLEN_T)mtval;
         break;
     case 0x344:
-        *rdptr = (MXLEN_T)mip;
+        *rdptr = STRUCT2INT(MXLEN_T,mip);
         break;
     case 0x34a:
         *rdptr = 0; // minst
@@ -629,10 +631,10 @@ int csr_read(uint32_t csr, MXLEN_T *rdptr){
         break;
     // Machine Configuration
     case 0x30a:
-        *rdptr = (MXLEN_T)menvcfg;
+        *rdptr = STRUCT2INT(MXLEN_T,menvcfg);
         break;
     case 0x31a:
-        *rdptr = (MXLEN_T) ((uint64_t)menvcfg >> 32);
+        *rdptr = STRUCT2INT(uint64_t,menvcfg)>>32;
         break;
     case 0x747:
         *rdptr = 0; //mseccfg
@@ -660,7 +662,7 @@ static void write_frm(MXLEN_T wdata){
 }
 
 static void write_mstatus(MXLEN_T wdata){
-    struct mstatus_t tmp_reg = (struct mstatus_t)wdata;
+    struct mstatus_t tmp_reg = INT2STRUCT(struct mstatus_t,wdata);
     mstatus.sie     = tmp_reg.sie;
     mstatus.mie     = tmp_reg.mie;
     mstatus.spie    = tmp_reg.spie;
@@ -704,13 +706,13 @@ int csr_write(uint32_t csr, MXLEN_T wdata)
         // mideleg
         break;
     case 0x304:
-        mie = (struct mie_t)wdata;
+        mie = INT2STRUCT(struct mie_t,wdata);
         break;
     case 0x305:
-        mtvec = (struct mtvec_t) wdata;
+        mtvec = INT2STRUCT(struct mtvec_t,wdata);
         break;
     case 0x306:
-        mcounteren = (struct mcounteren_t) wdata;
+        mcounteren = INT2STRUCT(struct mcounteren_t,wdata);
         break;
     case 0x310:
         // 当前配置只支持小端mstatush 是 read-only 0
@@ -723,22 +725,23 @@ int csr_write(uint32_t csr, MXLEN_T wdata)
         mepc = wdata;
         break;
     case 0x342:
-        mcause = (struct mcause_t)wdata;
+        mcause = INT2STRUCT(struct mcause_t,wdata);
         break;
     case 0x343:
         mtval = wdata;
         break;
     case 0x344:
-        mip = (struct mip_t)wdata;
+        mip =INT2STRUCT(struct mip_t,wdata);
         break;
 
     // Machine Configuration
-    case 0x30a:
-        menvcfg = (struct menvcfg_t)wdata;
-        break;
-    case 0x31a:
-        menvcfg = (struct menvcfg_t)(((uint64_t)wdata) << 32);
-        break;
+    // TODO, 需要把menvcfg拆开
+    // case 0x30a:
+    //     menvcfg = INT2STRUCT(struct menvcfg_t,wdata);
+    //     break;
+    // case 0x31a:
+    //     menvcfg = INT2STRUCT(struct menvcfg_t);
+    //     break;
     // case 0x747:
     //     //mseccfg
     //     break;

@@ -29,8 +29,6 @@ SOFTWARE.
     #include <stdint.h>
     #include "cpu_config.h"
 
-    #define PICK_BIT(no,value) ((1 << no) & value)
-
     typedef struct csr_feild
     {
         uint16_t id : 8;

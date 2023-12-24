@@ -30,9 +30,8 @@
 
 #include <stdint.h>
 
+
 #define ENTRY_SIZE 4096
-#define ALIGN2PGSZ(addr,T) (addr & (~(T)(ENTRY_SIZE -1)))
-#define MOD2PGSZ(addr,T) (addr & (T)(ENTRY_SIZE -1))
 
 // 初始化内存池
 void mem_pool_init();

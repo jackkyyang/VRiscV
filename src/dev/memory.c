@@ -33,6 +33,7 @@ SOFTWARE.
 #include <assert.h>
 #include "memory.h"
 #include "mem_pool.h"
+#include "../include/comm.h"
 
 static uint64_t dram_size;
 static uint64_t dram_offset;
