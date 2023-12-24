@@ -29,6 +29,7 @@ SOFTWARE.
 #include "cpu.h"
 #include "front_end.h"
 #include "back_end.h"
+#include "cpu_glb.h"
 
 // ----------------------------------------------
 // 定义PC
@@ -47,10 +48,11 @@ static inline void update_fetch_param(){
     fetch_param.pc = pc;
 }
 
-static inline void update_exe_param(FetchStatus f_st){
+static inline void update_exe_param(){
+    FetchStatus *f_st_ptr = get_fet_st_ptr();
     exe_param.iid = iid;
     exe_param.pc = pc;
-    exe_param.fetch_status = f_st;
+    exe_param.fetch_status = *f_st_ptr;
 }
 
 static void cpu_init()
@@ -66,25 +68,24 @@ static void cpu_init()
 
 uint64_t cpu_start(uint64_t TIME_OUT){
     cpu_init();
-    FetchStatus f_st;
-    ExeStatus e_st;
+    ExeStatus *e_st = read_exe_st();
     while (1)
     {
         // TimeOut 保护
         if(iid == TIME_OUT){
             printf("CPU timeout! Total Instruction Number: %lu\n",iid);
-            printf("current PC: %lx\n",e_st.curr_pc);
+            printf("current PC: %lx\n",e_st->curr_pc);
             break;
         }
 
         // Front End process
         update_fetch_param();
-        f_st = instruction_fetch(&fetch_param,fetch_data_buf);
+        instruction_fetch(&fetch_param,fetch_data_buf);
         // Back End process
-        update_exe_param(f_st);
-        e_st = instruction_execute(&exe_param);
+        update_exe_param();
+        instruction_execute(&exe_param);
         // 处理 各种error
-        if (e_st.redirect == 2){ // normal exit
+        if (e_st->redirect == 2){ // normal exit
             //临时处理，后面都在 exception report中处理
             printf("Execution End!");
             iid +=1;
@@ -93,7 +94,7 @@ uint64_t cpu_start(uint64_t TIME_OUT){
 
         // prepare for next instruction
         iid +=1;
-        pc = e_st.next_pc;
+        pc = e_st->next_pc;
     }
     return iid;
 }

@@ -25,8 +25,8 @@ SOFTWARE.
 
 #include "front_end.h"
 
-FetchStatus instruction_fetch(FetchParam* fetch_param, uint32_t* inst_buf)
+void instruction_fetch(FetchParam* fetch_param, uint32_t* inst_buf)
 {
-    FetchStatus f_st = {0};
-    return f_st;
+    FetchStatus *f_st_ptr = get_fet_st_ptr();
+    f_st_ptr->inst_num = 0;
 }

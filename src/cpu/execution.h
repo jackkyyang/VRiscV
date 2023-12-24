@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include "../dev/memory.h"
+#include "sys_reg.h"
 
 // reg op
 static inline void mul(uint8_t rd, uint8_t rs1, uint8_t rs2){
@@ -478,11 +479,18 @@ static inline void ecall(){
 static inline void ebreak(){
     uop();
 }
+static inline void mret(){
+    exception_info.exception_vaild = 1;
+}
+static inline void wfi(){
+    uop();
+}
 static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
     uint32_t read_data;
-    if (rd == 0)
+    CSRFeild *csr_id = (CSRFeild *) &csr;
+    if (rd == 0) // 只读取不写入
     {
-        csr()
+        csr_read(csr,&read_data);
     }
 
 }

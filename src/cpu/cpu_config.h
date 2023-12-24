@@ -26,9 +26,10 @@ SOFTWARE.
 #ifndef __CPU_CONFIG_H__
     #define __CPU_CONFIG_H__
 
-
-
 #include <stdint.h>
+
+#define U_MODE
+#define M_MODE
 
 typedef enum {
     I16 = 1,
@@ -38,12 +39,15 @@ typedef enum {
 
 typedef uint8_t FetchWidth;
 
+
 #ifdef RV64
-    #define RV_XLEN 64;
+    #define MXLEN 64;
     #define INST_SET I64
+    typedef uint64_t MXLEN_T;
 #else
-    #define RV_XLEN 32;
+    #define MXLEN 32
     #define INST_SET I32
+    typedef uint32_t MXLEN_T;
 #endif
 
 #define RESET_ADDR 0x80000000

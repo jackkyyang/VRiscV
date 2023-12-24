@@ -27,6 +27,7 @@ SOFTWARE.
 
 #include <stdint.h>
 #include "cpu_config.h"
+#include "cpu_glb.h"
 #include "front_end.h"
 
 typedef struct exe_param
@@ -39,20 +40,7 @@ typedef struct exe_param
 }ExeParam;
 
 
-typedef struct execute_status
-{
-    uint8_t  redirect;
-    // 0: No redirect
-    // 1: normal redirect
-    // 2: exit virtual machine
-    uint64_t next_pc;
-    uint64_t curr_pc;
-    uint64_t exception_id;
-    uint64_t address;
-    uint64_t cause;
-} ExeStatus;
-
-ExeStatus instruction_execute(ExeParam* exe_param);
+void instruction_execute(ExeParam* exe_param);
 
 // op
 #define OP_32     0b00110011

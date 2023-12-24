@@ -1,3 +1,4 @@
+#include "cpu_glb.h"
 
 /*
 MIT License
@@ -23,34 +24,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef __SYS_REG_H__
-    #define __SYS_REG_H__
+#include "cpu_glb.h"
+#include <stdint.h>
 
-    #include <stdint.h>
-    #include "cpu_config.h"
+static ExeStatus    cpu_exe_status;
+static FetchStatus  cpu_fet_status;
 
-    #define PICK_BIT(no,value) ((1 << no) & value)
+ExeStatus *get_exe_st_ptr()
+{
+    return &cpu_exe_status;
+}
 
-    typedef struct csr_feild
-    {
-        uint16_t id : 8;
-        uint16_t pri: 2;
-        uint16_t acc: 2;
-    }CSRFeild;
+ExeStatus *read_exe_st()
+{
+    return &cpu_exe_status;
+}
 
-    // 执行读CSR操作
-    // 如果执行失败，则返回非0值
-    // 执行成功，返回0
-    int csr_read(uint32_t csr, MXLEN_T *rdptr);
+FetchStatus *get_fet_st_ptr()
+{
+    return &cpu_fet_status;
+}
 
-    // 执行写CSR操作
-    // 如果执行失败，则返回非0值
-    // 执行成功，返回0
-    int csr_write(uint32_t csr,MXLEN_T wdata);
-
-    // implicitly inc the counter
-    void instreth_inc(uint64_t ins_num);
-
-    void sys_reg_reset();
-
-#endif //__SYS_REG_H__
+void raise_iinstr_excp(uint64_t cause)
+{
+    cpu_exe_status.redirect = 3;
+    // TODO
+}

@@ -213,6 +213,10 @@ void decode(uint32_t inst){
                 ecall();
             else if (rs1 == 0b00000 && rd == 0b00000 && imm == 0b000000000001)
                 ebreak();
+            else if (rs1 == 0b00000 && rd == 0b00000 && imm == 0b001100000010)
+                mret();
+            else if (rs1 == 0b00000 && rd == 0b00000 && imm == 0b000100000101)
+                wfi();
         }
         else if(func3 == 0b001)
             csrrw(rd,rs1,imm);

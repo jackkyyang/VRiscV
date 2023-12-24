@@ -1,4 +1,3 @@
-
 /*
 MIT License
 
@@ -23,34 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef __SYS_REG_H__
-    #define __SYS_REG_H__
 
-    #include <stdint.h>
-    #include "cpu_config.h"
+#ifndef __CPU_GLB_H__
+    #define __CPU_GLB_H__
 
-    #define PICK_BIT(no,value) ((1 << no) & value)
+#include "cpu_config.h"
+#include <stdint.h>
 
-    typedef struct csr_feild
-    {
-        uint16_t id : 8;
-        uint16_t pri: 2;
-        uint16_t acc: 2;
-    }CSRFeild;
+// 用于记录取指过程中发生的错误
+typedef struct fetch_status
+{
+    FetchWidth inst_num;
+    uint64_t err_id;  // if no err, this is 0
+    uint64_t err_address;
+    uint64_t cause;
+} FetchStatus;
 
-    // 执行读CSR操作
-    // 如果执行失败，则返回非0值
-    // 执行成功，返回0
-    int csr_read(uint32_t csr, MXLEN_T *rdptr);
+typedef struct execute_status
+{
+    uint8_t redirect;
+    // 0: No redirect
+    // 1: normal redirect
+    // 2: exit virtual machine
+    // 3: take exception
+    uint64_t next_pc;
+    uint64_t curr_pc;
+    uint32_t exception_id;
+    uint64_t address;
+    uint64_t cause;
+} ExeStatus;
 
-    // 执行写CSR操作
-    // 如果执行失败，则返回非0值
-    // 执行成功，返回0
-    int csr_write(uint32_t csr,MXLEN_T wdata);
+ExeStatus*      get_exe_st_ptr();
+ExeStatus*      read_exe_st();
+FetchStatus*    get_fet_st_ptr();
+void            raise_iinstr_excp(uint64_t cause);
 
-    // implicitly inc the counter
-    void instreth_inc(uint64_t ins_num);
-
-    void sys_reg_reset();
-
-#endif //__SYS_REG_H__
+#endif // __CPU_GLB_H__

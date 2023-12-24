@@ -30,6 +30,7 @@ SOFTWARE.
 #include "front_end.h"
 #include "back_end.h"
 #include "sys_reg.h"
+#include "cpu_glb.h"
 
 
 // 定义通用寄存器
@@ -60,10 +61,10 @@ static void clear_flags(){
 
 #include "decode.h"
 
-ExeStatus instruction_execute(ExeParam *exe_param)
+void instruction_execute(ExeParam *exe_param)
 {
-    ExeStatus e_st = {0};
-    e_st.curr_pc = exe_param->pc;
+    ExeStatus *e_st = get_exe_st_ptr();
+    e_st->curr_pc = exe_param->pc;
     pc           = exe_param->pc;
 
     // decode
@@ -75,12 +76,10 @@ ExeStatus instruction_execute(ExeParam *exe_param)
     if (x[0] != 0) printf("Error! Cannot write value to X0!");
 
     if (flags.is_branch || flags.is_jump) {
-        e_st.next_pc = next_pc;
+        e_st->next_pc = next_pc;
     } else {
-        e_st.next_pc = pc + 4;
+        e_st->next_pc = pc + 4;
     }
 
     instreth_inc(FETCH_NUM);
-
-    return e_st;
 }
