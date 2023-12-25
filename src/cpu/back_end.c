@@ -34,11 +34,10 @@ SOFTWARE.
 
 
 // 定义通用寄存器
-static uint64_t x[32]; // 通用寄存器
-static uint64_t pc;
-static uint64_t next_pc;
+static MXLEN_T x[32]; // 通用寄存器
+static MXLEN_T pc;
+static MXLEN_T next_pc;
 // Exceptions
-static ExcptInfo exception_info;
 // ----------------------------------------------
 void backend_init(){
     // 初始化通用寄存器
@@ -46,8 +45,6 @@ void backend_init(){
     {
         x[i] = i;
     }
-    exception_info.exception_vaild = 0;
-    exception_info.exception_cause = 0;
 }
 
 // flags
@@ -71,12 +68,16 @@ void instruction_execute(ExeParam *exe_param)
     uint32_t inst  = *exe_param->fetch_data_buf;
     clear_flags();
 
-    decode(inst);
+    decode(inst,e_st);
 
     if (x[0] != 0) printf("Error! Cannot write value to X0!");
 
-    if (flags.is_branch || flags.is_jump) {
+    if (e_st->branch) { // 处理分支指令
         e_st->next_pc = next_pc;
+        e_st->branch = 0;
+    } else if (e_st->exception) {
+        e_st->next_pc = next_pc;
+        e_st->exception = 0;
     } else {
         e_st->next_pc = pc + 4;
     }

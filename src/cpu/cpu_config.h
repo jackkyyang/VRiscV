@@ -43,11 +43,17 @@ typedef uint8_t FetchWidth;
 #ifdef RV64
     #define MXLEN 64;
     #define INST_SET I64
-    typedef uint64_t MXLEN_T;
+    typedef uint64_t   MXLEN_T;
+    typedef int64_t    MXLEN_ST;
+    typedef __uint128_t  DMXLEN_T; // double length of the MXLEN
+    typedef __int128_t   DMXLEN_ST; // double length of the MXLEN
 #else
     #define MXLEN 32
     #define INST_SET I32
-    typedef uint32_t MXLEN_T;
+    typedef uint32_t  MXLEN_T;
+    typedef int32_t   MXLEN_ST;
+    typedef uint64_t  DMXLEN_T; // double length of the MXLEN
+    typedef int64_t   DMXLEN_ST; // double length of the MXLEN
 #endif
 
 #define RESET_ADDR 0x80000000

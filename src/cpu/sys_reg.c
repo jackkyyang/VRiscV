@@ -33,7 +33,7 @@ SOFTWARE.
 // M mode csr registers
 //---------------------------------
 // Machine ISA Register
-static const struct misa_t
+static struct misa_t
 {
     MXLEN_T a        : 1; // Atomic
     MXLEN_T b        : 1;
@@ -63,34 +63,7 @@ static const struct misa_t
     MXLEN_T z        : 1;
     MXLEN_T reserved : (MXLEN - 28);
     MXLEN_T mxl      :2; // Machine XLEN
-} misa = {   1,     //a
-             0,     //b
-             0,     //c
-             0,     //d
-             0,     //e
-             0,     //f
-             0,     //g
-             0,     //h
-             1,     //i
-             0,     //j
-             0,     //k
-             0,     //l
-             0,     //m
-             0,     //n
-             0,     //o
-             0,     //p
-             0,     //q
-             0,     //r
-             0,     //s
-             0,     //t
-             1,     //u
-             0,     //v
-             0,     //w
-             0,     //x
-             0,     //y
-             0,     //z
-             0,     //reserved
-             1};    // mxl
+} misa;
 
 // Machine Vendor ID Register
 // the value of 0 can be returned to
@@ -462,6 +435,43 @@ static uint64_t hpmcounter(int no){
 
     return mhpmcounter[no - 3];
 }
+
+// Reset
+void sys_reg_reset()
+{
+    mstatus.mie = 0;
+    mstatus.mprv = 0;
+    mstatush.mbe = 0;
+    misa.a       =1;     //a
+    misa.b       =0;     //b
+    misa.c       =0;     //c
+    misa.d       =0;     //d
+    misa.e       =0;     //e
+    misa.f       =0;     //TODO, f
+    misa.g       =0;     //g
+    misa.h       =0;     //h
+    misa.i       =1;     //i
+    misa.j       =0;     //j
+    misa.k       =0;     //k
+    misa.l       =0;     //l
+    misa.m       =0;     //m
+    misa.n       =0;     //n
+    misa.o       =0;     //o
+    misa.p       =0;     //p
+    misa.q       =0;     //q
+    misa.r       =0;     //r
+    misa.s       =0;     //s
+    misa.t       =0;     //t
+    misa.u       =1;     //u, User mode
+    misa.v       =0;     //v
+    misa.w       =0;     //w
+    misa.x       =0;     //x
+    misa.y       =0;     //y
+    misa.z       =0;     //z
+    misa.reserved=0;     //reserved
+    misa.mxl     =1;    //xlen = 32
+}
+
 
 //-------------------------------
 // CRS 读写操作

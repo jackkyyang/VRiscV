@@ -29,6 +29,7 @@ SOFTWARE.
 
 static ExeStatus    cpu_exe_status;
 static FetchStatus  cpu_fet_status;
+static CPUMode cpu_mode;
 
 ExeStatus *get_exe_st_ptr()
 {
@@ -47,6 +48,16 @@ FetchStatus *get_fet_st_ptr()
 
 void raise_iinstr_excp(uint64_t cause)
 {
-    cpu_exe_status.redirect = 3;
+    cpu_exe_status.exception = 1;
     // TODO
+}
+
+CPUMode get_cpu_mode()
+{
+    return cpu_mode;
+}
+
+void set_cpu_mode(CPUMode next_mode)
+{
+    cpu_mode = next_mode;
 }

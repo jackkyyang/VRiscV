@@ -29,6 +29,14 @@ SOFTWARE.
 #include "cpu_config.h"
 #include <stdint.h>
 
+typedef enum cpu_mode{
+    U = 0,
+    #ifdef S_MODE
+    S = 1
+    #endif
+    M = 3
+} CPUMode;
+
 // 用于记录取指过程中发生的错误
 typedef struct fetch_status
 {
@@ -40,21 +48,23 @@ typedef struct fetch_status
 
 typedef struct execute_status
 {
-    uint8_t redirect;
-    // 0: No redirect
-    // 1: normal redirect
-    // 2: exit virtual machine
-    // 3: take exception
-    uint64_t next_pc;
-    uint64_t curr_pc;
-    uint32_t exception_id;
-    uint64_t address;
-    uint64_t cause;
+    uint8_t exit;
+    // 0: continue
+    // 1: exit virtual machine
+    MXLEN_T next_pc;
+    MXLEN_T curr_pc;
+    CPUMode next_mode;
+    // for next process
+    uint8_t branch;
+    uint8_t exception;
+
 } ExeStatus;
 
 ExeStatus*      get_exe_st_ptr();
 ExeStatus*      read_exe_st();
 FetchStatus*    get_fet_st_ptr();
 void            raise_iinstr_excp(uint64_t cause);
+CPUMode         get_cpu_mode();
+void            set_cpu_mode(CPUMode next_mode);
 
 #endif // __CPU_GLB_H__

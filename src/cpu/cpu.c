@@ -30,6 +30,7 @@ SOFTWARE.
 #include "front_end.h"
 #include "back_end.h"
 #include "cpu_glb.h"
+#include "sys_reg.h"
 
 // ----------------------------------------------
 // 定义PC
@@ -64,6 +65,9 @@ static void cpu_init()
     exe_param.inst_set = INST_SET;
     exe_param.fetch_data_buf = fetch_data_buf;
     backend_init();
+    sys_reg_reset();
+    ExeStatus *e_st = get_exe_st_ptr();
+    e_st->next_mode = M;
 }
 
 uint64_t cpu_start(uint64_t TIME_OUT){
@@ -74,20 +78,20 @@ uint64_t cpu_start(uint64_t TIME_OUT){
         // TimeOut 保护
         if(iid == TIME_OUT){
             printf("CPU timeout! Total Instruction Number: %lu\n",iid);
-            printf("current PC: %lx\n",e_st->curr_pc);
+            printf("current PC: %lx\n",(uint64_t)(e_st->curr_pc));
             break;
         }
 
+        set_cpu_mode(e_st->next_mode);
         // Front End process
         update_fetch_param();
         instruction_fetch(&fetch_param,fetch_data_buf);
         // Back End process
         update_exe_param();
         instruction_execute(&exe_param);
-        // 处理 各种error
-        if (e_st->redirect == 2){ // normal exit
-            //临时处理，后面都在 exception report中处理
-            printf("Execution End!");
+
+        if (e_st->exit){
+            printf("Virtual Machine Exit!");
             iid +=1;
             break;
         }

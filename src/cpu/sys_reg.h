@@ -51,4 +51,6 @@ SOFTWARE.
 
     void sys_reg_reset();
 
+    void ecall_sys_set();
+
 #endif //__SYS_REG_H__
