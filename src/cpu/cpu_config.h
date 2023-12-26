@@ -29,7 +29,6 @@ SOFTWARE.
 #include <stdint.h>
 
 #define U_MODE
-#define M_MODE
 
 typedef enum {
     I16 = 1,

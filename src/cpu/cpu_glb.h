@@ -30,11 +30,15 @@ SOFTWARE.
 #include <stdint.h>
 
 typedef enum cpu_mode{
+
+#ifdef U_MODE
     U = 0,
-    #ifdef S_MODE
+#endif
+#ifdef S_MODE
     S = 1
-    #endif
+#endif
     M = 3
+
 } CPUMode;
 
 // 用于记录取指过程中发生的错误
@@ -53,10 +57,11 @@ typedef struct execute_status
     // 1: exit virtual machine
     MXLEN_T next_pc;
     MXLEN_T curr_pc;
-    CPUMode next_mode;
-    // for next process
-    uint8_t branch;
-    uint8_t exception;
+
+    CPUMode next_mode; // 用于切换模式
+    uint8_t branch; // 用于分支跳转
+    uint8_t exception; //用于处理异常
+    MXLEN_T trap_val; // 对应mtval中的信息
 
 } ExeStatus;
 

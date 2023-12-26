@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <stdint.h>
+#include <assert.h>
 #include "sys_reg.h"
 #include "cpu_glb.h"
 #include "../dev/clock.h"
@@ -90,11 +91,11 @@ static const MXLEN_T mhartid = 0;
 static struct mstatus_t
 {
     uint32_t wpri0  :1;     // bit 0
-    uint32_t sie    :1;     // bit 1
+    uint32_t sie    :1;     // bit 1, 不实现S模式，read-only 0
     uint32_t wpri2  :1;     // bit 2
     uint32_t mie    :1;     // bit 3, reset to 0
     uint32_t wpri4  :1;     // bit 4
-    uint32_t spie   :1;     // bit 5
+    uint32_t spie   :1;     // bit 5, 不实现S模式，read-only 0
     uint32_t ube    :1;     // bit 6, 只支持小端，read-only 0
     uint32_t mpie   :1;     // bit 7
     uint32_t spp    :1;     // bit 8, 不实现S模式，read-only 0
@@ -471,6 +472,68 @@ void sys_reg_reset()
     misa.reserved=0;     //reserved
     misa.mxl     =1;    //xlen = 32
 }
+
+// 进入M状态时的系统寄存器处理
+// 硬件自动处理的部分
+void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
+    mcause.interrupt = interrupt;
+    mcause.exception_code = e_code;
+
+    ExeStatus *e_st = get_exe_st_ptr();
+    // 保存异常现场
+    // 异常PC
+    mepc = e_st->curr_pc;
+    // 异常信息，供软件使用
+    mtval = e_st->trap_val;
+    assert(mtvec.base == 0 || mtvec.base == 1); // 其它值都是非法值
+    // 异常路由
+    if (mtvec.base == 1)
+    {
+        if (interrupt == 1)
+        {
+            e_st->next_pc = (mtvec.base << 2) + (4 * e_code);
+        }
+        else
+        {
+            e_st->next_pc = (mtvec.base << 2);
+        }
+    } else if (mtvec.base == 0)
+    {
+        e_st->next_pc = (mtvec.base << 2);
+    }
+    // 设置状态寄存器
+    mstatus.mpie = mstatus.mie; // 保存之前的中断使能配置
+    mstatus.mie = 0; // 关闭中断
+    if (curr_mode == M)
+    {
+        mstatus.mpp  = 3;
+    } else if (curr_mode == U)
+    {
+        mstatus.mpp  = 0;
+    }
+    // 进入M模式
+    e_st->next_mode = M;
+}
+
+void ecall_trap()
+{
+    CPUMode curr_mode = get_cpu_mode();
+    if (curr_mode == U)
+    {
+        trap2m(0,8,curr_mode);
+    }
+    #ifdef S_MODE
+    else if (curr_mode == M)
+    {
+        trap2m(0,9,curr_mode);
+    }
+    #endif
+    else if (curr_mode == M)
+    {
+        trap2m(0,11,curr_mode);
+    }
+}
+
 
 
 //-------------------------------

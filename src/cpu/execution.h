@@ -394,6 +394,7 @@ static inline void auipc(uint8_t rd, int32_t imm){
 static inline void ecall(){
     ExeStatus *e_st = get_exe_st_ptr();
     e_st->exception = 1;
+    ecall_trap(); // 执行trap操作，在其中设置好了next_pc
 }
 static inline void ebreak(){
     uop();
