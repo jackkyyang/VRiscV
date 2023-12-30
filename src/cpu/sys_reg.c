@@ -473,69 +473,6 @@ void sys_reg_reset()
     misa.mxl     =1;    //xlen = 32
 }
 
-// 进入M状态时的系统寄存器处理
-// 硬件自动处理的部分
-void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
-    mcause.interrupt = interrupt;
-    mcause.exception_code = e_code;
-
-    ExeStatus *e_st = get_exe_st_ptr();
-    // 保存异常现场
-    // 异常PC
-    mepc = e_st->curr_pc;
-    // 异常信息，供软件使用
-    mtval = e_st->trap_val;
-    assert(mtvec.base == 0 || mtvec.base == 1); // 其它值都是非法值
-    // 异常路由
-    if (mtvec.base == 1)
-    {
-        if (interrupt == 1)
-        {
-            e_st->next_pc = (mtvec.base << 2) + (4 * e_code);
-        }
-        else
-        {
-            e_st->next_pc = (mtvec.base << 2);
-        }
-    } else if (mtvec.base == 0)
-    {
-        e_st->next_pc = (mtvec.base << 2);
-    }
-    // 设置状态寄存器
-    mstatus.mpie = mstatus.mie; // 保存之前的中断使能配置
-    mstatus.mie = 0; // 关闭中断
-    if (curr_mode == M)
-    {
-        mstatus.mpp  = 3;
-    } else if (curr_mode == U)
-    {
-        mstatus.mpp  = 0;
-    }
-    // 进入M模式
-    e_st->next_mode = M;
-}
-
-void ecall_trap()
-{
-    CPUMode curr_mode = get_cpu_mode();
-    if (curr_mode == U)
-    {
-        trap2m(0,8,curr_mode);
-    }
-    #ifdef S_MODE
-    else if (curr_mode == M)
-    {
-        trap2m(0,9,curr_mode);
-    }
-    #endif
-    else if (curr_mode == M)
-    {
-        trap2m(0,11,curr_mode);
-    }
-}
-
-
-
 //-------------------------------
 // CRS 读写操作
 //-------------------------------
@@ -735,12 +672,19 @@ static void write_frm(MXLEN_T wdata){
 }
 
 static void write_mstatus(MXLEN_T wdata){
+    // 只有部分字段可写，剩下的都是read-only 0
     struct mstatus_t tmp_reg = INT2STRUCT(struct mstatus_t,wdata);
     mstatus.sie     = tmp_reg.sie;
     mstatus.mie     = tmp_reg.mie;
     mstatus.spie    = tmp_reg.spie;
     mstatus.mpie    = tmp_reg.mpie;
-    mstatus.mpp     = tmp_reg.mpp;
+    #ifndef S_MODE
+        //没实现S模式，因此不能向MPP中写入1或2
+        if (tmp_reg.mpp == 1 || tmp_reg.mpp == 2)
+            mstatus.mpp     = 0;
+        else
+            mstatus.mpp     = tmp_reg.mpp;
+    #endif
     // mstatus.fs      = tmp_reg.fs;
     mstatus.mprv    = tmp_reg.mprv;
     mstatus.tw      = tmp_reg.tw;
@@ -828,3 +772,98 @@ int csr_write(uint32_t csr, MXLEN_T wdata)
     return 0;
 }
 
+//---------------------------------------------
+// Trap 进M状态时的系统寄存器处理
+// 硬件自动处理的部分
+void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
+    mcause.interrupt = interrupt;
+    mcause.exception_code = e_code;
+
+    ExeStatus *e_st = get_exe_st_ptr();
+    e_st->exception = 1;
+    // 保存异常现场
+    // 异常PC
+    mepc = e_st->curr_pc;
+    // 异常信息，供软件使用
+    assert(mtvec.base == 0 || mtvec.base == 1); // 其它值都是非法值
+    // 异常路由
+    if (mtvec.base == 1)
+    {
+        if (interrupt == 1)
+        {
+            e_st->next_pc = (mtvec.base << 2) + (4 * e_code);
+        }
+        else
+        {
+            e_st->next_pc = (mtvec.base << 2);
+        }
+    } else if (mtvec.base == 0)
+    {
+        e_st->next_pc = (mtvec.base << 2);
+    }
+    // 设置状态寄存器
+    mstatus.mpie = mstatus.mie; // 保存之前的中断使能配置
+    mstatus.mie = 0; // 关闭中断
+    if (curr_mode == M)
+    {
+        mstatus.mpp  = 3;
+    } else if (curr_mode == U)
+    {
+        mstatus.mpp  = 0;
+    }
+    // 进入M模式
+    e_st->next_mode = M;
+}
+
+void ecall_trap()
+{
+    CPUMode curr_mode = get_cpu_mode();
+    if (curr_mode == U)
+    {
+        trap2m(0,8,curr_mode);
+    }
+    #ifdef S_MODE
+    else if (curr_mode == M)
+    {
+        trap2m(0,9,curr_mode);
+    }
+    #endif
+    else if (curr_mode == M)
+    {
+        trap2m(0,11,curr_mode);
+    }
+}
+
+//
+void raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst){
+    trap2m(0,2,curr_mode);
+    mtval = inst;
+};
+
+
+// Mret 的处理
+void mret_proc(){
+    ExeStatus *e_st = get_exe_st_ptr();
+    mstatus.mie = mstatus.mpie;
+    mstatus.mpie = 1;
+    e_st->exception = 1;
+    if (mstatus.mpp == 0)
+    {
+        e_st->next_mode = U;
+        mstatus.mprv = 0;
+    }
+    #ifdef S_MODE
+    else if (mstatus.mpp == 1)
+    {
+        e_st->next_mode = S;
+        mstatus.mprv = 0;
+    }
+    #endif
+    else if (mstatus.mpp == 3)
+    {
+        e_st->next_mode = M;
+    }
+
+    mstatus.mpp = 0; // 每次mret时都设置成最小的privilege level
+    e_st->next_pc = mepc;
+}

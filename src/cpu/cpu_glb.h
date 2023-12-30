@@ -52,16 +52,16 @@ typedef struct fetch_status
 
 typedef struct execute_status
 {
-    uint8_t exit;
     // 0: continue
     // 1: exit virtual machine
-    MXLEN_T next_pc;
-    MXLEN_T curr_pc;
+    uint8_t exit;
+    MXLEN_T next_pc;// 下一个指令的PC
+    MXLEN_T curr_pc;// 当前指令的PC
 
     CPUMode next_mode; // 用于切换模式
     uint8_t branch; // 用于分支跳转
     uint8_t exception; //用于处理异常
-    MXLEN_T trap_val; // 对应mtval中的信息
+    MXLEN_T inst; // 指令内容，异常时写入mtval
 
 } ExeStatus;
 
@@ -71,5 +71,5 @@ FetchStatus*    get_fet_st_ptr();
 void            raise_iinstr_excp(uint64_t cause);
 CPUMode         get_cpu_mode();
 void            set_cpu_mode(CPUMode next_mode);
-
+void            raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst);
 #endif // __CPU_GLB_H__

@@ -70,7 +70,7 @@ static void cpu_init()
     e_st->next_mode = M;
 }
 
-uint64_t cpu_start(uint64_t TIME_OUT){
+uint64_t cpu_run(uint64_t TIME_OUT){
     cpu_init();
     ExeStatus *e_st = read_exe_st();
     while (1)

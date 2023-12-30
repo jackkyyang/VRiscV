@@ -392,43 +392,179 @@ static inline void auipc(uint8_t rd, int32_t imm){
 }
 // system
 static inline void ecall(){
-    ExeStatus *e_st = get_exe_st_ptr();
-    e_st->exception = 1;
     ecall_trap(); // 执行trap操作，在其中设置好了next_pc
 }
 static inline void ebreak(){
     uop();
 }
 static inline void mret(){
-    ExeStatus *e_st = get_exe_st_ptr();
-    e_st->next_mode= U; // TODO, 从MPP中得到结果
+    ExeStatus *e_st = read_exe_st();
+    CPUMode curr_mode = get_cpu_mode();
+    if (curr_mode != M)
+    {
+        //如果在非M模式下执行，直接报异常
+        raise_illegal_instruction(curr_mode,e_st->inst);
+        return;
+    }
+    // 执行MRET指令
+    mret_proc();
 }
 static inline void wfi(){
     uop();
 }
-static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
-    MXLEN_T read_data;
-    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
-    if (rd == 0) // 只读取不写入
+
+static inline int csr_check(CSRFeild csr_id,int write){
+    ExeStatus *e_st = read_exe_st();
+    CPUMode curr_mode = get_cpu_mode();
+    int err_flag = 0;
+    // 检查是否访问了高权限寄存器
+    if (curr_mode == U && csr_id.pri > 0)
     {
-        csr_read(csr,&read_data);
+        err_flag = 1;
+    }
+    #ifdef S_MODE
+    else if (curr_mode == S && csr_id.pri > 1)
+    {
+        err_flag = 1;
+    }
+    #endif
+
+    // 检查是否对只读寄存器进行写操作
+    if (write == 1 && csr_id.acc == 3)
+    {
+        err_flag = 1;
+    }
+
+    if (err_flag == 1)
+    {
+        raise_illegal_instruction(curr_mode,e_st->inst);
+    }
+
+    return err_flag;
+}
+
+static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
+    MXLEN_T read_data,write_data;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    // 检查指令是否合法，包括
+    // 1. 检查读写权限
+    // 2. 检查是否访问了高级别的寄存器
+    if (csr_check(csr_id,1)) // 非法指令，跳过执行阶段
+        return;
+
+    csr_read(csr,&read_data);
+    if (rd != 0) // 如果rd==0，不写寄存器
+    {
+        x[rd] = read_data;
+    }
+    // rw一定会写入
+    write_data = x[rs1];
+    csr_write(csr,write_data);
+}
+static inline void csrrs(uint8_t rd, uint8_t rs1, uint32_t csr){
+    MXLEN_T read_data,write_msk,write_data;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+
+    // 检查指令是否合法，包括
+    // 1. 检查读写权限
+    // 2. 检查是否访问了高级别的寄存器
+    if (csr_check(csr_id,(rs1!=0))) // 非法指令，跳过执行阶段
+        return;
+
+    csr_read(csr,&read_data);
+    if (rd != 0) // 如果rd==0，不写寄存器
+    {
+        x[rd] = read_data;
+    }
+    if (rs1 != 0) // 如果rs==0，不写CSR
+    {
+        write_msk = x[rs1];
+        write_data = read_data | write_msk; // 将mask中为1的bit置1
+        csr_write(csr,write_data);
     }
 
 }
-static inline void csrrs(uint8_t rd, uint8_t rs1, uint32_t csr){
-    ;
-}
 static inline void csrrc(uint8_t rd, uint8_t rs1, uint32_t csr){
-    ;
+    MXLEN_T read_data,write_msk,write_data;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+
+    // 检查指令是否合法，包括
+    // 1. 检查读写权限
+    // 2. 检查是否访问了高级别的寄存器
+    if (csr_check(csr_id,(rs1!=0))) // 非法指令，跳过执行阶段
+        return;
+
+    csr_read(csr,&read_data);
+    if (rd != 0) // 如果rd==0，不写寄存器
+    {
+        x[rd] = read_data;
+    }
+    if (rs1 != 0) // 如果rs==0，不写CSR
+    {
+        write_msk = x[rs1];
+        write_data = read_data & (~write_msk); // 将mask中为1的bit清零
+        csr_write(csr,write_data);
+    }
 }
 static inline void csrrwi(uint8_t rd, uint8_t rs1, uint32_t csr){
-    ;
+    MXLEN_T read_data,write_data;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    // 检查指令是否合法，包括
+    // 1. 检查读写权限
+    // 2. 检查是否访问了高级别的寄存器
+    if (csr_check(csr_id,1)) // 非法指令，跳过执行阶段
+        return;
+
+    csr_read(csr,&read_data);
+    if (rd != 0) // 如果rd==0，不写寄存器
+    {
+        x[rd] = read_data;
+    }
+    // rw一定会写入
+    write_data = (MXLEN_T)rs1;
+    csr_write(csr,write_data);
 }
 static inline void csrrsi(uint8_t rd, uint8_t rs1, uint32_t csr){
-    ;
+    MXLEN_T read_data,write_data,write_msk;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    // 检查指令是否合法，包括
+    // 1. 检查读写权限
+    // 2. 检查是否访问了高级别的寄存器
+    if (csr_check(csr_id,(rs1!=0))) // 非法指令，跳过执行阶段
+        return;
+
+    csr_read(csr,&read_data);
+    if (rd != 0) // 如果rd==0，不写寄存器
+    {
+        x[rd] = read_data;
+    }
+    if (rs1 != 0) // 如果rs==0，不写CSR
+    {
+        write_msk = (MXLEN_T)rs1;
+        write_data = read_data | write_msk; // 将mask中为1的bit置1
+        csr_write(csr,write_data);
+    }
 }
 static inline void csrrci(uint8_t rd, uint8_t rs1, uint32_t csr){
-    ;
+    MXLEN_T read_data,write_data,write_msk;
+    CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    // 检查指令是否合法，包括
+    // 1. 检查读写权限
+    // 2. 检查是否访问了高级别的寄存器
+    if (csr_check(csr_id,(rs1!=0))) // 非法指令，跳过执行阶段
+        return;
+
+    csr_read(csr,&read_data);
+    if (rd != 0) // 如果rd==0，不写寄存器
+    {
+        x[rd] = read_data;
+    }
+    if (rs1 != 0) // 如果rs==0，不写CSR
+    {
+        write_msk = (MXLEN_T)rs1;
+        write_data = read_data & (~write_msk); // 将mask中为1的bit清零
+        csr_write(csr,write_data);
+    }
 }
 // misc mem
 static inline void fence_tso(){
@@ -442,7 +578,7 @@ static inline void fence(uint8_t rd, uint8_t rs1, uint8_t succ,uint8_t pred,uint
 }
 // Undefined
 static inline void undef(){
-    ExeStatus *e_st = get_exe_st_ptr();
-    e_st->exception = 1;
+    ExeStatus *e_st = read_exe_st();
+    raise_illegal_instruction(get_cpu_mode(),e_st->inst);
 }
 #endif //__EXECUTION_H__

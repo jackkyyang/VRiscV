@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 
     print_localtime();
     begin = clock();
-    INST_NUM = cpu_start(TIME_OUT_NUM);
+    INST_NUM = cpu_run(TIME_OUT_NUM);
     end = clock();
     time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
     ips = (double)(INST_NUM)/time_cost;
