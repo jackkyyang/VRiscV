@@ -28,6 +28,17 @@ SOFTWARE.
 
 #include <stdint.h>
 
+// Memory Map
+    #define DRAM1MB    (1<<20)
+    #define DRAM128MB  DRAM1MB * 128
+
+    #define DRAM_BASE 0x80000000
+    #define DRAM_END  DRAM_BASE + DRAM128MB - 1
+
+
+
+// End Memory Map
+
 typedef enum {
     CPU_FE  = 0, // Front End in CPU
     CPU_BE  = 1, // Back End in CPU
@@ -44,9 +55,6 @@ typedef struct mem_port
 void memory_init(uint64_t mem_size);
 void memory_free();
 
-#define DRAM1MB    (1<<20)
-#define DRAM128MB  DRAM1MB * 128
-
 // 主存读操作
 // addr: 读地址，无符号数，位宽为64 bits
 // byte_num：读取的（byte）数量
@@ -62,5 +70,25 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_bu
 // op_src: 操作来源
 // Return：0 失败，other：成功，且写入数据的数量
 int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_buf);
+
+// 0：无错误
+// 1：访问了不存在的地址
+// 2：对于某些设备，发生了地址不对齐的访问
+// 3：跨设备访问
+uint32_t get_ifu_fault();
+// 0：无错误
+// 1：访问了不存在的地址
+// 2：对于某些设备，发生了地址不对齐的访问
+// 3：跨设备访问
+// 4：写只读地址
+// 5：对只执行的地址进行读取
+uint32_t get_lsu_fault();
+// 0：无错误
+// 1：访问了不存在的地址
+// 2：对于某些设备，发生了地址不对齐的访问
+// 3：跨设备访问
+// 5：对只执行的地址进行读取
+uint32_t get_mmu_fault();
+
 
 #endif //__MEMORY_H__

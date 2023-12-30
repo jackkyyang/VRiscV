@@ -35,8 +35,8 @@ typedef struct exe_param
     uint64_t iid;           //当前执行到第几条指令
     uint64_t pc;            //当前的PC值
     InstSet  inst_set;       //指令集：16，32，64
-    FetchStatus fetch_status;
-    uint32_t* fetch_data_buf;
+    FetchStatus *fetch_status;
+    uint32_t *fetch_data_buf;
 }ExeParam;
 
 

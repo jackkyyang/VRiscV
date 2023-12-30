@@ -50,10 +50,8 @@ static inline void update_fetch_param(){
 }
 
 static inline void update_exe_param(){
-    FetchStatus *f_st_ptr = get_fet_st_ptr();
     exe_param.iid = iid;
     exe_param.pc = pc;
-    exe_param.fetch_status = *f_st_ptr;
 }
 
 static void cpu_init()
@@ -64,6 +62,7 @@ static void cpu_init()
     fetch_param.inst_set = INST_SET;
     exe_param.inst_set = INST_SET;
     exe_param.fetch_data_buf = fetch_data_buf;
+    exe_param.fetch_status = get_fet_st_ptr();
     backend_init();
     sys_reg_reset();
     ExeStatus *e_st = get_exe_st_ptr();

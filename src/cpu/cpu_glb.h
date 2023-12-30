@@ -45,9 +45,8 @@ typedef enum cpu_mode{
 typedef struct fetch_status
 {
     FetchWidth inst_num;
-    uint64_t err_id;  // if no err, this is 0
-    uint64_t err_address;
-    uint64_t cause;
+    // 见 get_ifu_fault();
+    uint32_t err_id;
 } FetchStatus;
 
 typedef struct execute_status
@@ -64,9 +63,10 @@ typedef struct execute_status
     MXLEN_T inst; // 指令内容，异常时写入mtval
 
 } ExeStatus;
-
+// 存放执行结果
 ExeStatus*      get_exe_st_ptr();
 ExeStatus*      read_exe_st();
+// 存放取指结果
 FetchStatus*    get_fet_st_ptr();
 void            raise_iinstr_excp(uint64_t cause);
 CPUMode         get_cpu_mode();

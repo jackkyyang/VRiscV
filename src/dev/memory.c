@@ -35,22 +35,33 @@ SOFTWARE.
 #include "mem_pool.h"
 #include "../include/comm.h"
 
-static uint64_t dram_size;
-static uint64_t dram_offset;
+
+static uint32_t ifu_fault;
+static uint32_t lsu_fault;
+static uint32_t mmu_fault;
+
+uint32_t get_ifu_fault(){
+    return ifu_fault;
+}
+uint32_t get_lsu_fault(){
+    return lsu_fault;
+}
+uint32_t get_mmu_fault(){
+    return mmu_fault;
+}
 
 typedef struct mem_check
 {
+    uint8_t fault; // 是否存在memory 访问错误
     uint8_t across_page; // 是否跨页
-    uint8_t byte_num; // 是否跨页
+    uint8_t byte_num; // 第一页中的访问的字节数
     uint64_t across_offset; // 跨页后的offset
     uint64_t next_page_addr; // 跨页后的地址
 } MCheck;
 
-
 void memory_init(uint64_t mem_size)
 {
     mem_pool_init();
-    dram_size = mem_size;
 }
 
 void memory_free()
@@ -64,6 +75,18 @@ static MCheck addr_check(uint64_t addr, uint8_t byte_num, MemOpSrc op_src){
     // 不允许跨设备进行访问
     uint64_t addr_tmp  = 0;
     MCheck addr_check = {0};
+
+    if (addr < DRAM_BASE || (addr + byte_num) > DRAM_END)
+    {
+        addr_check.fault = 1;
+        if (op_src == CPU_FE)
+            ifu_fault = 1;
+        else if (op_src == CPU_BE)
+            lsu_fault = 1;
+        else if (op_src == CPU_MMU)
+            mmu_fault = 1;
+    }
+
 
     addr_tmp = (addr & (uint64_t)(ENTRY_SIZE - 1)) + ((uint64_t)byte_num);
     if (addr_tmp > ENTRY_SIZE) {
@@ -80,11 +103,11 @@ static MCheck addr_check(uint64_t addr, uint8_t byte_num, MemOpSrc op_src){
 
 
 static uint8_t *get_mem_ptr(uint64_t addr){
-    uint64_t page_addr = ALIGN2PGSZ(addr,uint64_t);
+    uint64_t page_addr = (uint64_t)ROUND(addr,ENTRY_SIZE);
     uint8_t *mem_addr = mem_pool_lkup(page_addr);
     if (mem_addr == NULL)
         return NULL;
-    uint64_t offset = MOD2PGSZ(addr,uint64_t);
+    uint64_t offset = MOD(addr,ENTRY_SIZE);
     return (mem_addr + offset);
 }
 
@@ -103,7 +126,7 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_bu
     }
 
 
-    if (byte_num == 0 || rd_ptr==NULL)
+    if (byte_num == 0 || rd_ptr==NULL || mem_check.fault==1)
         return 0;
 
     for (uint8_t i = 0; i < mem_check.byte_num; i++)
@@ -137,7 +160,7 @@ int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_b
         assert((mem_check.byte_num + mem_check.across_offset) == byte_num);
     }
 
-    if (byte_num == 0 || wr_ptr==NULL)
+    if (byte_num == 0 || wr_ptr==NULL || mem_check.fault==1)
         return 0;
 
     for (uint8_t i = 0; i < mem_check.byte_num; i++)

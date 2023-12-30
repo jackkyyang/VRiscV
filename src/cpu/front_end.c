@@ -24,9 +24,19 @@ SOFTWARE.
 
 
 #include "front_end.h"
+#include "cpu_config.h"
+#include "../dev/memory.h"
 
 void instruction_fetch(FetchParam* fetch_param, uint32_t* inst_buf)
 {
     FetchStatus *f_st_ptr = get_fet_st_ptr();
-    f_st_ptr->inst_num = 0;
+    int inst_fetch = read_data(fetch_param->pc,FETCH_NUM*4,CPU_FE,(uint8_t*)inst_buf);
+    if (inst_fetch == 0)
+    {
+        f_st_ptr->err_id = get_ifu_fault();
+        f_st_ptr->inst_num = 0;
+    }
+    else {
+        f_st_ptr->inst_num = FETCH_NUM;
+    }
 }

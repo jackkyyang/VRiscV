@@ -51,8 +51,8 @@ static uint64_t l3_table_size; // 内存池大小，单位是ENTRY_SIZE
 
 typedef struct l3_entry_t
 {
-    uint8_t valid; // 本级表的offset 为[27:19]
-    uint8_t *addr; //下一级表，offset为[18:12]
+    uint8_t valid; // 本级表的offset 为[18:12]
+    uint8_t *addr; // 每个表容纳的地址空间
 }L3Entry;
 
 typedef struct l2_entry_t
