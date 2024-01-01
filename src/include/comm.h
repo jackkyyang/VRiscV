@@ -32,7 +32,7 @@ SOFTWARE.
 #define ALIGN2PGSZ(addr,T) (addr & (~(T)(ENTRY_SIZE -1)))
 #define MOD2PGSZ(addr,T) (addr & (T)(ENTRY_SIZE -1))
 
-#define ROUND(x, align)  (void *)(((uintptr_t)x) & ~(align - 1))
+#define ROUND(x, align)  (((uintptr_t)x) & ~(align - 1))
 #define MOD(x, align)    (((uintptr_t)x) & (align - 1))
 #define push(sp, T, ...) ({ *((T*)sp) = (T)__VA_ARGS__; \
                             sp = (void *)((uintptr_t)(sp) + sizeof(T)); })

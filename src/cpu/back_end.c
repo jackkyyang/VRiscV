@@ -64,7 +64,7 @@ void instruction_execute(ExeParam *exe_param)
     e_st->curr_pc = exe_param->pc;
     pc           = exe_param->pc;
     // decode
-    uint32_t inst  = *exe_param->fetch_data_buf;
+    uint32_t inst  = *(exe_param->fetch_data_buf);
     e_st->inst = (MXLEN_T)inst;
     clear_flags();
 

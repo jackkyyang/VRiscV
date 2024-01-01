@@ -76,7 +76,7 @@ static MCheck addr_check(uint64_t addr, uint8_t byte_num, MemOpSrc op_src){
     uint64_t addr_tmp  = 0;
     MCheck addr_check = {0};
 
-    if (addr < DRAM_BASE || (addr + byte_num) > DRAM_END)
+    if (addr < DRAM_BASE || addr > DRAM_END || (addr + byte_num) > DRAM_END)
     {
         addr_check.fault = 1;
         if (op_src == CPU_FE)
