@@ -15,16 +15,15 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include "../dev/mem_pool.h"
+#include "../include/comm.h"
 
 #define STK_SZ           (1 << 20)
-#define ROUND(x, align)  (((uintptr_t)x) & ~(align - 1))
-#define MOD(x, align)    (((uintptr_t)x) & (align - 1))
-#define push(sp, T, ...) ({ *((T*)sp) = (T)__VA_ARGS__; \
-                            sp = (void *)((uintptr_t)(sp) + sizeof(T)); })
 
-void execve_(const char *file, char *argv[], char *envp[]) {
+
+uint64_t simple_loader(const char *file) {
   // WARNING: This execve_ does not free process resources.
   int fd = open(file, O_RDONLY);
+  uint64_t entry_addr=0;
   assert(fd > 0);
   Elf32_Ehdr *h = mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, fd, 0);
   assert(h != (void *)-1);
@@ -46,6 +45,8 @@ void execve_(const char *file, char *argv[], char *envp[]) {
          h->e_ident[14] == 0x00 &&
          h->e_ident[15] == 0x00);
   assert(h->e_type == ET_EXEC && h->e_machine == EM_RISCV);
+
+  entry_addr= (uint64_t) h->e_entry;// 获取程序起始地址
 
   // 根据 Program header table file offset，拿到program header table的地址
   // 其中(char *)是为因为offset的单位是字节
@@ -121,9 +122,7 @@ void execve_(const char *file, char *argv[], char *envp[]) {
   // void *sp_exec = sp;
   // int argc = 0;
 
-// TODO, 传入argc和argv，需要先建立栈空间
-// 跳到程序入口
-
+  return entry_addr;
 
 }
 

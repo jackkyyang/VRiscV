@@ -25,4 +25,9 @@ SOFTWARE.
 #ifndef __SIMPLE_LOADER_H__
     #define __SIMPLE_LOADER_H__
 
+// 简单的程序加载器，用于bring-up和调试
+// 输入为可执行的ELF文件路径
+// 输出为程序的入口
+uint64_t simple_loader(const char *file);
+
 #endif //__SIMPLE_LOADER_H__

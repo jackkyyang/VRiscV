@@ -28,6 +28,10 @@ SOFTWARE.
 
 #include "cpu/cpu.h"
 #include "dev/memory.h"
+#include "utils/simple_loader.h"
+
+
+#define RESET_ADDR 0x80000000
 
 void print_localtime(){
     time_t now = time(NULL);
@@ -36,26 +40,43 @@ void print_localtime(){
     printf("--------------------------------\n");
 }
 
-uint64_t arguments_parse(int argc, char* argv[]){
+static uint64_t timeout_num = 100000;
+static char* load_file;
+static uint8_t load_file_valid = 0;
+
+void arguments_parse(int argc, char* argv[]){
     char* endptr;
-    uint64_t num;
+    load_file_valid = 0;
     if (argc == 2){
-        num = strtoul(argv[1],&endptr,0);
+        timeout_num = strtoul(argv[1],&endptr,0);
         if (*endptr != '\0'){
             printf("Bad Argument Content: %s",argv[1]);
-            return 0;
-        } else if(num == 0){
+            return;
+        } else if(timeout_num == 0){
             printf("Instruction Number must be positive!");
-            return 0;
+            return;
         }
         else {
             printf("--------------------------------\n");
-            printf("Input a valid Argument: %lu\n",num);\
-            return num;
+            printf("Input a valid Argument: %lu\n",timeout_num);\
+            return;
         }
-    } else {
+    }
+    else if (argc == 3)
+    {
+        if (argv[1] != "-l")
+        {
+            printf("Must use the loader");
+        }
+        load_file_valid = 1;
+        load_file = argv[2];
+        return;
+    }
+
+
+    else {
         printf("Bad Arguments Number: %d\n",argc);
-        return 0;
+        return;
     }
 }
 
@@ -64,18 +85,27 @@ int main(int argc, char* argv[]){
     clock_t begin, end;
     double time_cost;
     double ips = 0;
-    uint64_t TIME_OUT_NUM = arguments_parse(argc,argv);
     uint64_t INST_NUM = 0;
+    uint64_t entry_addr = RESET_ADDR; // 默认值为RESET_ADDR
 
-    if (TIME_OUT_NUM == 0){
+    arguments_parse(argc,argv);
+
+    if (timeout_num == 0){
         return 0;
     }
 
     memory_init(DRAM128MB);
 
+    if (load_file_valid)
+    {
+        // 必须在初始化memory之后才能加载可执行文件
+        entry_addr = simple_loader(load_file);
+    }
+
     print_localtime();
     begin = clock();
-    INST_NUM = cpu_run(TIME_OUT_NUM);
+    INST_NUM = cpu_run(timeout_num,entry_addr);
+
     end = clock();
     time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
     ips = (double)(INST_NUM)/time_cost;

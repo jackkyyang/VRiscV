@@ -54,9 +54,9 @@ static inline void update_exe_param(){
     exe_param.pc = pc;
 }
 
-static void cpu_init()
+static void cpu_init(uint64_t entry_addr)
 {
-    pc = RESET_ADDR;
+    pc = entry_addr;
     iid = 0;
     fetch_param.max_inst_num = FETCH_NUM;
     fetch_param.inst_set = INST_SET;
@@ -69,8 +69,8 @@ static void cpu_init()
     e_st->next_mode = M;
 }
 
-uint64_t cpu_run(uint64_t TIME_OUT){
-    cpu_init();
+uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr){
+    cpu_init(entry_addr);
     ExeStatus *e_st = read_exe_st();
     while (1)
     {

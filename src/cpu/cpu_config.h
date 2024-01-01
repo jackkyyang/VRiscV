@@ -55,7 +55,7 @@ typedef uint8_t FetchWidth;
     typedef int64_t   DMXLEN_ST; // double length of the MXLEN
 #endif
 
-#define RESET_ADDR 0x80000000
+
 #define FETCH_NUM 1
 
 #endif //__CPU_CONFIG_H__
