@@ -25,6 +25,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cpu/cpu.h"
 #include "dev/memory.h"
@@ -32,6 +33,7 @@ SOFTWARE.
 
 
 #define RESET_ADDR 0x80000000
+#define TIMEOUT 100000
 
 void print_localtime(){
     time_t now = time(NULL);
@@ -40,7 +42,7 @@ void print_localtime(){
     printf("--------------------------------\n");
 }
 
-static uint64_t timeout_num = 100000;
+static uint64_t timeout_num = TIMEOUT; // 默认值为TIMEOUT
 static char* load_file;
 static uint8_t load_file_valid = 0;
 
@@ -64,10 +66,12 @@ void arguments_parse(int argc, char* argv[]){
     }
     else if (argc == 3)
     {
-        if (argv[1] != "-l")
+        if (strcmp(argv[1],"-s"))
         {
-            printf("Must use the loader");
+            printf("Must use option:-l, but found a %s\n",argv[1]);
+            return;
         }
+        printf("--------------\nEnter Self-test mode.\nTest case: %s\n--------------\n",argv[2]);
         load_file_valid = 1;
         load_file = argv[2];
         return;

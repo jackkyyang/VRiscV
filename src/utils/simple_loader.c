@@ -1,8 +1,31 @@
 /**
- * 来自于南京大学操作系统课 Demo
+MIT License
+
+Copyright (c) 2023 jackkyyang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+描述：
+ * 简单的程序加载器，为虚拟机加载静态连接的二进制自测程序
+ * 参考了南京大学操作系统课的加载器Demo，根据自己的需求，进行了修改
  * 课程主页：https://jyywiki.cn/OS/2022/index.html
  * 文件地址：https://jyywiki.cn/pages/OS/2022/demos/loader-static.c
- * 根据自己的需求，进行了少量修改
 */
 
 #include <stdint.h>
@@ -14,6 +37,8 @@
 #include <elf.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+
 #include "../dev/mem_pool.h"
 #include "../include/comm.h"
 
@@ -21,11 +46,20 @@
 
 
 uint64_t simple_loader(const char *file) {
-  // WARNING: This execve_ does not free process resources.
+
+  //获取ELF文件大小
+  struct stat statbuf;
+  stat(file,&statbuf);
+  long elf_filesize = statbuf.st_size;
+  size_t elf_map_size = (size_t)ROUND(elf_filesize,4096);
+  if (elf_map_size > 4096 * 1024)
+  {
+    printf("Warning! The size of elf file is larger than 4MB, please check! ---filepath:%s\n",file);
+  }
   int fd = open(file, O_RDONLY);
   uint64_t entry_addr=0;
   assert(fd > 0);
-  Elf32_Ehdr *h = mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, fd, 0);
+  Elf32_Ehdr *h = mmap(NULL, elf_map_size, PROT_READ, MAP_PRIVATE, fd, 0);
   assert(h != (void *)-1);
   // check the magic number
   assert(h->e_ident[0]  == 0x7f &&
@@ -55,28 +89,13 @@ uint64_t simple_loader(const char *file) {
     // 取第i个propgram header
     Elf32_Phdr *p = &pht[i];
     if (p->p_type == PT_LOAD) {
-      // int prot = 0;
-      // // 设置权限，p_flags里保存了段的权限信息
-      // // if (p->p_flags & PF_R) prot |= PROT_READ;
-      // // if (p->p_flags & PF_W) prot |= PROT_WRITE;
-      // // if (p->p_flags & PF_X) prot |= PROT_EXEC;
-      // // 将段映射到本进程
-      // void *ret = mmap(
-      //   (void*)ROUND(p->p_vaddr, p->p_align),              // addr, 映射起始地址必须对齐到指定位置
-      //   p->p_memsz + MOD(p->p_vaddr, p->p_align),   // length, 如果程序的起始位置没有对齐,在页表内部需要加一个偏移
-      //   prot,                                       // protection
-      //   MAP_PRIVATE | MAP_FIXED,                    // flags, private & strict
-      //   fd,                                         // file descriptor
-      //   (uintptr_t)ROUND(p->p_offset, p->p_align)); // offset，相对于文件头的偏移量
-      // assert(ret != (void *)-1);
-
       // 将ELF中的内容搬运到内存池中
       assert(p->p_align <= ENTRY_SIZE); // 程序的对齐要求必须小于内存池的最小尺寸
-      Elf32_Word mapped_size = 0; // 已经map的数据量
-      Elf32_Word proc_size = 0;// 某次处理的数据量
-      Elf32_Word remain_size = 0; // 未处理的数据量
+      uint64_t mapped_size = 0; // 已经map的数据量
+      uint64_t proc_size = 0;// 某次处理的数据量
+      uint64_t remain_size = 0; // 未处理的数据量
       // 需要处理的数据总量，包括有效的数据和需要对齐的数据
-      Elf32_Word total_size = p->p_filesz + MOD(p->p_vaddr,p->p_align);
+      uint64_t total_size = (uint64_t)(p->p_filesz + MOD(p->p_vaddr,p->p_align));
       void* start_va = 0;
       void* elf_start_addr = 0; // 定位到ELF文件中程序头表的起始偏移量
       void* src_align_addr = 0; // ELF中处理的程序偏移量
@@ -98,16 +117,22 @@ uint64_t simple_loader(const char *file) {
           proc_size = remain_size;
         }
         else {
-          proc_size = (Elf32_Word)(ENTRY_SIZE - (uint64_t)ROUND(start_va, ENTRY_SIZE));
+          proc_size = (ENTRY_SIZE - (uint64_t)ROUND(start_va, ENTRY_SIZE));
         }
 
         // 计算目的内存页的首地址，结果对齐到了内存池中每页的最小尺寸
-        mem_pool_addr = mem_pool_lkup((uint64_t)ROUND(start_va, ENTRY_SIZE));
+        uint64_t mem_pool_va_tag = (uint64_t)ROUND(start_va, ENTRY_SIZE);
+        mem_pool_addr = mem_pool_lkup(mem_pool_va_tag);
         // 计算目的地址，内存池基地址加上起始地址的offset
         mem_start_addr = (void*)(mem_pool_addr + MOD(start_va,ENTRY_SIZE));
-        mem_end_addr = (void *)(mem_start_addr + proc_size);
+        mem_end_addr = (mem_start_addr + (proc_size));
         // 复制程序内容到虚拟机内存
         memcpy(mem_start_addr,src_align_addr,(size_t)proc_size);
+
+        // for (int i = 0; i < proc_size; i+=4)
+        // {
+        //   printf("value at elf start addr: %x\n",*((uint32_t*)(src_align_addr + i)));
+        // }
 
         mapped_size +=proc_size;
       }
@@ -115,6 +140,7 @@ uint64_t simple_loader(const char *file) {
       memset(mem_end_addr, 0, p->p_memsz - p->p_filesz);
     }
   }
+  munmap((void*)h,elf_map_size);
   close(fd);
 
   // static char stack[STK_SZ], rnd[16];
@@ -125,11 +151,3 @@ uint64_t simple_loader(const char *file) {
   return entry_addr;
 
 }
-
-// int main(int argc, char *argv[], char *envp[]) {
-//   if (argc < 2) {
-//     fprintf(stderr, "Usage: %s file [args...]\n", argv[0]);
-//     exit(1);
-//   }
-//   execve_(argv[1], argv + 1, envp);
-// }
