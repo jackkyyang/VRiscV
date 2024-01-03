@@ -198,7 +198,7 @@ void decode(uint32_t inst,ExeStatus *e_st){
         flags.is_li = 1;
         lui(rd,li_imm);
     }
-    else if (opcode == LUI)
+    else if (opcode == AUIPC)
     {
         int32_t li_imm = (inst & 0b11111111111111111111000000000000);
         flags.is_li = 1;
