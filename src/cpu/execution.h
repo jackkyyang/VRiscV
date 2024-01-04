@@ -372,14 +372,14 @@ static inline void sh(uint8_t rs1, uint8_t rs2, int32_t imm){
     uint8_t wr_data[2] = {(uint8_t)r2,(uint8_t)(r2 >> 8)};
     MXLEN_T addr = addr_calc(r1,imm);
     int write_num = write_data(addr,2,CPU_BE,wr_data);
-    assert(write_num == 1); // write指令必须有数据返回
+    assert(write_num == 2); // write指令必须有数据返回
 }
 static inline void sw(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     MXLEN_T r2 = (MXLEN_T)(x[rs2]);
     MXLEN_T addr = addr_calc(r1,imm);
     int write_num = write_data(addr,4,CPU_BE,(uint8_t*)(&r2));
-    assert(write_num == 1); // write指令必须有数据返回
+    assert(write_num == 4); // write指令必须有数据返回
 }
 // load imme
 static inline void lui(uint8_t rd, int32_t imm){

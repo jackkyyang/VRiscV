@@ -76,7 +76,8 @@ void instruction_execute(ExeParam *exe_param)
         e_st->next_pc = next_pc;
         e_st->branch = 0;
     } else if (e_st->exception) {
-        e_st->next_pc = next_pc;
+        // next_pc是由异常处理函数计算出来的，已经更新到e_st中
+        next_pc = e_st->next_pc;
         e_st->exception = 0;
     } else {
         e_st->next_pc = pc + 4;

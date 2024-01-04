@@ -785,9 +785,9 @@ void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
     // 异常PC
     mepc = e_st->curr_pc;
     // 异常信息，供软件使用
-    assert(mtvec.base == 0 || mtvec.base == 1); // 其它值都是非法值
+    assert(mtvec.mode == 0 || mtvec.mode == 1); // 其它值都是非法值
     // 异常路由
-    if (mtvec.base == 1)
+    if (mtvec.mode == 1)
     {
         if (interrupt == 1)
         {
@@ -797,7 +797,7 @@ void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
         {
             e_st->next_pc = (mtvec.base << 2);
         }
-    } else if (mtvec.base == 0)
+    } else if (mtvec.mode == 0)
     {
         e_st->next_pc = (mtvec.base << 2);
     }
