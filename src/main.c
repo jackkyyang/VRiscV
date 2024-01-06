@@ -43,12 +43,12 @@ void print_localtime(){
 }
 
 static uint64_t timeout_num = TIMEOUT; // 默认值为TIMEOUT
-static char* load_file;
-static uint8_t load_file_valid = 0;
+static char* self_test_file;
+static uint8_t self_test = 0;
 
 void arguments_parse(int argc, char* argv[]){
     char* endptr;
-    load_file_valid = 0;
+    self_test = 0;
     if (argc == 2){
         timeout_num = strtoul(argv[1],&endptr,0);
         if (*endptr != '\0'){
@@ -68,12 +68,12 @@ void arguments_parse(int argc, char* argv[]){
     {
         if (strcmp(argv[1],"-s"))
         {
-            printf("Must use option:-l, but found a %s\n",argv[1]);
+            printf("Must use option:-s, but found a %s\n",argv[1]);
             return;
         }
         printf("--------------\nEnter Self-test mode.\nTest case: %s\n--------------\n",argv[2]);
-        load_file_valid = 1;
-        load_file = argv[2];
+        self_test = 1;
+        self_test_file = argv[2];
         return;
     }
 
@@ -100,15 +100,15 @@ int main(int argc, char* argv[]){
 
     memory_init(DRAM128MB);
 
-    if (load_file_valid)
+    if (self_test)
     {
         // 必须在初始化memory之后才能加载可执行文件
-        entry_addr = simple_loader(load_file);
+        entry_addr = simple_loader(self_test_file);
     }
 
     print_localtime();
     begin = clock();
-    INST_NUM = cpu_run(timeout_num,entry_addr);
+    INST_NUM = cpu_run(timeout_num,entry_addr,self_test);
 
     end = clock();
     time_cost = (double)(end-begin)/CLOCKS_PER_SEC;

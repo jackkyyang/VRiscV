@@ -52,8 +52,11 @@ typedef struct fetch_status
 typedef struct execute_status
 {
     // 0: continue
-    // 1: exit virtual machine
+    // 1: exit virtual machine with test pass
+    // 2：exit virtual machine with test failure
     uint8_t exit;
+    // 运行模式为自测模式，需要在ecall的时候检查寄存器结果
+    uint8_t self_test;
     MXLEN_T next_pc;// 下一个指令的PC
     MXLEN_T curr_pc;// 当前指令的PC
 

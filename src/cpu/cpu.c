@@ -30,7 +30,7 @@ SOFTWARE.
 #include "front_end.h"
 #include "back_end.h"
 #include "cpu_glb.h"
-#include "sys_reg.h"
+#include "../include/color.h"
 
 // ----------------------------------------------
 // 定义PC
@@ -54,7 +54,7 @@ static inline void update_exe_param(){
     exe_param.pc = pc;
 }
 
-static void cpu_init(uint64_t entry_addr)
+static void cpu_init(uint64_t entry_addr,uint8_t self_test)
 {
     pc = entry_addr;
     iid = 0;
@@ -64,19 +64,20 @@ static void cpu_init(uint64_t entry_addr)
     exe_param.fetch_data_buf = fetch_data_buf;
     exe_param.fetch_status = get_fet_st_ptr();
     backend_init();
-    sys_reg_reset();
     ExeStatus *e_st = get_exe_st_ptr();
     e_st->next_mode = M;
+    e_st->self_test = self_test;
 }
 
-uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr){
-    cpu_init(entry_addr);
+uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test){
+    cpu_init(entry_addr,self_test);
     ExeStatus *e_st = read_exe_st();
     while (1)
     {
         // TimeOut 保护
         if(iid == TIME_OUT){
-            printf("CPU timeout! Total Instruction Number: %lu\n",iid);
+            printf("**********" L_RED "TIMEOUT" NONE "**********\n");
+            printf("TIMEOUT Instruction Number: %lu\n",iid);
             printf("current PC: %lx\n",(uint64_t)(e_st->curr_pc));
             break;
         }
@@ -89,9 +90,24 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr){
         update_exe_param();
         instruction_execute(&exe_param);
 
-        if (e_st->exit){
-            printf("Virtual Machine Exit!");
+        if (e_st->exit != 0){
+            printf("Virtual Machine Exit!\n");
             iid +=1;
+            if (e_st->self_test)
+            {
+                printf("Self Test Exit! Total Instruction Number: %lu\n",iid);
+                printf("current PC: %lx\n",(uint64_t)(e_st->curr_pc));
+                printf("*******************************\n");
+                if (e_st->exit == 1)
+                {
+                    printf("**********" L_BLUE " TEST PASS " NONE "**********\n");
+                }
+                else if(e_st->exit == 2){
+                    printf("**********" L_RED " TEST FAIL " NONE "**********\n");
+                }
+                printf("*******************************\n");
+            }
+
             break;
         }
 

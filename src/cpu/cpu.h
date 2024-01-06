@@ -27,6 +27,6 @@ SOFTWARE.
 
 #include <stdint.h>
 
-uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr);
+uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test);
 
 #endif //__CPU_H__

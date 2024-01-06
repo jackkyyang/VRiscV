@@ -45,6 +45,8 @@ void backend_init(){
     {
         x[i] = i;
     }
+    // 初始化系统寄存器
+    sys_reg_reset();
 }
 
 // flags

@@ -51,8 +51,8 @@ uint64_t simple_loader(const char *file) {
   struct stat statbuf;
   stat(file,&statbuf);
   long elf_filesize = statbuf.st_size;
-  size_t elf_map_size = (size_t)ROUND(elf_filesize,4096);
-  if (elf_map_size > 4096 * 1024)
+  size_t elf_map_size = (size_t)ROUND((elf_filesize + 4095),4096);
+  if (elf_map_size > 4096 * 1024)\
   {
     printf("Warning! The size of elf file is larger than 4MB, please check! ---filepath:%s\n",file);
   }

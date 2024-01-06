@@ -392,6 +392,20 @@ static inline void auipc(uint8_t rd, int32_t imm){
 }
 // system
 static inline void ecall(){
+    ExeStatus *e_st = read_exe_st();
+    if (e_st->self_test)
+    {
+        // 自测模式，如果a0为0，则自测pass，否则fail
+        if (x[10] == 0) // a0 > 0
+        {
+            e_st->exit = 1; // 自测成功，退出代码为1
+        }
+        else {
+            e_st->exit = 2; // 自测失败，退出代码为1
+        }
+        return;
+    }
+
     ecall_trap(); // 执行trap操作，在其中设置好了next_pc
 }
 static inline void ebreak(){
