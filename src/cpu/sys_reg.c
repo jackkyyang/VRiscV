@@ -478,7 +478,7 @@ void sys_reg_reset()
 //-------------------------------
 int csr_read(uint32_t csr, MXLEN_T *rdptr){
 
-    uint16_t csr_addr = (uint16_t)csr;
+    uint16_t csr_addr = ((uint16_t)csr) & 0xfff;
     //-----------------------
     // U mode
     //-----------------------
@@ -694,7 +694,7 @@ static void write_mstatus(MXLEN_T wdata){
 
 int csr_write(uint32_t csr, MXLEN_T wdata)
 {
-    uint16_t csr_addr = (uint16_t)(csr);
+    uint16_t csr_addr = ((uint16_t)csr) & 0xfff;
     switch (csr_addr)
     {
     case 0x001:
