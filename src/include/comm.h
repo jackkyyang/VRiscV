@@ -25,6 +25,8 @@ SOFTWARE.
 #ifndef __COMM_H__
     #define __COMM_H__
 
+#define ERR_ADDR 0xffffffffffffffff
+
 #define STRUCT2INT(T,s) *((T*) &s)
 #define INT2STRUCT(T,i) *((T*) &i)
 #define PICK_BIT(no,value) ((1 << no) & value)

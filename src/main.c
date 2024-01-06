@@ -30,6 +30,7 @@ SOFTWARE.
 #include "cpu/cpu.h"
 #include "dev/memory.h"
 #include "utils/simple_loader.h"
+#include "include/comm.h"
 
 
 #define RESET_ADDR 0x80000000
@@ -104,6 +105,11 @@ int main(int argc, char* argv[]){
     {
         // 必须在初始化memory之后才能加载可执行文件
         entry_addr = simple_loader(self_test_file);
+        if (entry_addr == ERR_ADDR)
+        {
+            return 0;
+        }
+
     }
 
     print_localtime();

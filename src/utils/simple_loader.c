@@ -58,7 +58,12 @@ uint64_t simple_loader(const char *file) {
   }
   int fd = open(file, O_RDONLY);
   uint64_t entry_addr=0;
-  assert(fd > 0);
+  if (fd <= 0)
+  {
+    printf("Cannot open file: %s",file);
+    return ERR_ADDR;
+  }
+
   Elf32_Ehdr *h = mmap(NULL, elf_map_size, PROT_READ, MAP_PRIVATE, fd, 0);
   assert(h != (void *)-1);
   // check the magic number
