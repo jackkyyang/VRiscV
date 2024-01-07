@@ -161,7 +161,7 @@ static inline void sub(uint8_t rd, uint8_t rs1, uint8_t rs2){
     MXLEN_ST r1 = (MXLEN_ST)(x[rs1]);
     MXLEN_ST r2 = (MXLEN_ST)(x[rs2]);
     if (rd != 0)
-        x[rd] = (uint64_t)(r1 + r2);
+        x[rd] = (uint64_t)(r1 - r2);
 }
 
 static inline void sra(uint8_t rd, uint8_t rs1, uint8_t rs2){
