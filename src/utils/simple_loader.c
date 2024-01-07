@@ -58,35 +58,48 @@ uint64_t simple_loader(const char *file) {
   }
   int fd = open(file, O_RDONLY);
   uint64_t entry_addr=0;
-  if (fd <= 0)
+  if (fd == -1)
   {
-    printf("Cannot open file: %s",file);
+    printf("Cannot open file: %s\n",file);
     return ERR_ADDR;
   }
 
   Elf32_Ehdr *h = mmap(NULL, elf_map_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  assert(h != (void *)-1);
   // check the magic number
-  assert(h->e_ident[0]  == 0x7f &&
-         h->e_ident[1]  == 0x45 &&
-         h->e_ident[2]  == 0x4c &&
-         h->e_ident[3]  == 0x46 &&
-         h->e_ident[4]  == 0x01 &&
-         h->e_ident[5]  == 0x01 &&
-         h->e_ident[6]  == 0x01 &&
-         h->e_ident[7]  == 0x00 &&
-         h->e_ident[8]  == 0x00 &&
-         h->e_ident[9]  == 0x00 &&
-         h->e_ident[10] == 0x00 &&
-         h->e_ident[11] == 0x00 &&
-         h->e_ident[12] == 0x00 &&
-         h->e_ident[13] == 0x00 &&
-         h->e_ident[14] == 0x00 &&
-         h->e_ident[15] == 0x00);
-  assert(h->e_type == ET_EXEC && h->e_machine == EM_RISCV);
+  if(h->e_ident[0]  != 0x7f ||
+     h->e_ident[1]  != 0x45 ||
+     h->e_ident[2]  != 0x4c ||
+     h->e_ident[3]  != 0x46 ||
+     h->e_ident[4]  != 0x01 ||
+     h->e_ident[5]  != 0x01 ||
+     h->e_ident[6]  != 0x01 ||
+     h->e_ident[7]  != 0x00 ||
+     h->e_ident[8]  != 0x00 ||
+     h->e_ident[9]  != 0x00 ||
+     h->e_ident[10] != 0x00 ||
+     h->e_ident[11] != 0x00 ||
+     h->e_ident[12] != 0x00 ||
+     h->e_ident[13] != 0x00 ||
+     h->e_ident[14] != 0x00 ||
+     h->e_ident[15] != 0x00) {
+    printf("Error! Not a ELF file: %s\n",file);
+    close(fd);
+    return ERR_ADDR;
+  }
+
+  if(h->e_type != ET_EXEC){
+    printf("Error! Not a Executable file: %s\n",file);
+    close(fd);
+    return ERR_ADDR;
+  }
+
+  if(h->e_machine != EM_RISCV){
+    printf("Error! Not a RISCV elf file: %s\n",file);
+    close(fd);
+    return ERR_ADDR;
+  }
 
   entry_addr= (uint64_t) h->e_entry;// 获取程序起始地址
-
   // 根据 Program header table file offset，拿到program header table的地址
   // 其中(char *)是为因为offset的单位是字节
   Elf32_Phdr *pht = (Elf32_Phdr *)((char *)h + h->e_phoff);
