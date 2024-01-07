@@ -185,6 +185,10 @@ int main(int argc, char* argv[]){
     if (self_test){
         // 必须在初始化memory之后才能加载可执行文件
         entry_addr = simple_loader(self_test_file);
+        // 清理历史log
+        FILE* st_fd = fopen("./self_test_result.log","w");
+        fprintf(st_fd,"0");
+        fclose(st_fd);
     }
 
     // ----------------------------------

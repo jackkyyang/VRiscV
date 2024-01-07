@@ -597,6 +597,9 @@ static inline void pause(){
 static inline void fence(uint8_t rd, uint8_t rs1, uint8_t succ,uint8_t pred,uint8_t fm){
     uop();
 }
+static inline void fence_i(){
+    uop();
+}
 // Undefined
 static inline void undef(){
     ExeStatus *e_st = read_exe_st();

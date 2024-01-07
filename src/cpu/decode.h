@@ -245,8 +245,11 @@ void decode(uint32_t inst,ExeStatus *e_st){
             fence_tso();
         else if (func3 == 0 && rs1 == 0 && rd == 0 && imm == 0b000000010000)
             pause();
+        else if (func3 == 1 && rs1 == 0 && rd == 0 && imm == 0)
+            fence_i();
         else if (func3 == 0b000)
             fence(rd,rs1,succ,pred,fm);
+
         else undef();
     }
     else undef();

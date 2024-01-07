@@ -11,7 +11,7 @@ def find_test_files(test_dir:str,test_set:str) -> list[str]:
     else:
         filenames= os.listdir(test_dir)
         # match_pattern = f"{test_set}-\w+"
-        match_pattern = f"^(?!.*dump)({test_set}-\w+)" # 包括{test_set}并排除有dump的文件
+        match_pattern = f"^(?!.*\.)({test_set}-\w+)" # 包括{test_set}并排除有dump的文件
         for file in filenames:
             if re.match(match_pattern,file):
                 test_files.append(file)
@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
     for test in test_files:
         test_file = os.path.join(args.test_path,test)
+        # print(test)
         if take_test(args.dut_path,os.path.join(args.test_path,test)):
             break
         pass_num +=1
