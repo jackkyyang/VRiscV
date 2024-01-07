@@ -8,6 +8,13 @@
 #include "../include/comm.h"
 #include "cpu_glb.h"
 
+static inline MXLEN_ST signed_ext(MXLEN_T source, uint8_t sign_loc){
+    MXLEN_T top_bit = source >> sign_loc;
+    MXLEN_T sign_ext_mask = (MXLEN_T)(0xffffffffffffffff << (sign_loc + 1));
+    MXLEN_ST result = (top_bit >= 1) ? (MXLEN_ST)(source|sign_ext_mask) : (MXLEN_ST)source;
+    return result;
+}
+
 static inline MXLEN_T addr_calc(MXLEN_T source, int32_t imm){
         // 相当于AGU
         MXLEN_ST abs_imm = (MXLEN_ST)(-imm);
@@ -240,7 +247,7 @@ static inline void bne(uint8_t rs1, uint8_t rs2, int32_t imm){
         br_taken_cnt +=1;
         next_pc = addr_calc(pc,imm);
     } else {
-        next_pc = (MXLEN_ST)(pc + 4);
+        next_pc = (MXLEN_T)(pc + 4);
     }
 }
 static inline void blt(uint8_t rs1, uint8_t rs2, int32_t imm){
@@ -315,7 +322,7 @@ static inline void lb(uint8_t rd, uint8_t rs1, int32_t imm){
     int read_num = read_data(addr,1,CPU_BE,&rd_data);
     assert(read_num == 1); // load指令必须有数据返回
     if (rd != 0)
-        x[rd] = (MXLEN_ST)(rd_data);
+        x[rd] = signed_ext(rd_data,7);
 
 }
 static inline void lh(uint8_t rd, uint8_t rs1, int32_t imm){
@@ -325,7 +332,7 @@ static inline void lh(uint8_t rd, uint8_t rs1, int32_t imm){
     int read_num = read_data(addr,2,CPU_BE,(uint8_t*)(&rd_data));
     assert(read_num == 2); // load指令必须有数据返回
     if (rd != 0) {
-        x[rd] = (MXLEN_ST)(rd_data);
+        x[rd] = signed_ext(rd_data,15);
     }
 }
 static inline void lw(uint8_t rd, uint8_t rs1, int32_t imm){
