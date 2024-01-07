@@ -98,14 +98,18 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* t
                 printf("Self Test Exit! Total Instruction Number: %lu\n",iid);
                 printf("current PC: %lx\n",(uint64_t)(e_st->curr_pc));
                 printf("*******************************\n");
+                FILE* st_fd = fopen("./self_test_result.log","w");
                 if (e_st->exit == 1)
                 {
                     printf("**********" L_BLUE " TEST PASS " NONE "**********\n");
+                    fprintf(st_fd,"1");
                 }
                 else if(e_st->exit == 2){
                     printf("**********" L_RED " TEST FAIL " NONE "**********\n");
+                    fprintf(st_fd,"0");
                 }
                 printf("*******************************\n");
+                fclose(st_fd);
             }
 
             break;

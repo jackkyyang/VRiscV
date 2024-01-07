@@ -135,7 +135,7 @@ uint64_t simple_loader(const char *file) {
           proc_size = remain_size;
         }
         else {
-          proc_size = (ENTRY_SIZE - (uint64_t)ROUND(start_va, ENTRY_SIZE));
+          proc_size = (ENTRY_SIZE - (uint64_t)MOD(start_va, ENTRY_SIZE));
         }
 
         // 计算目的内存页的首地址，结果对齐到了内存池中每页的最小尺寸
