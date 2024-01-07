@@ -26,7 +26,8 @@ SOFTWARE.
     #define __CPU_H__
 
 #include <stdint.h>
+#include <stdio.h>
 
-uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test);
+uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* tpc_fd);
 
 #endif //__CPU_H__

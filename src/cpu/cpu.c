@@ -69,7 +69,7 @@ static void cpu_init(uint64_t entry_addr,uint8_t self_test)
     e_st->self_test = self_test;
 }
 
-uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test){
+uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* tpc_fd){
     cpu_init(entry_addr,self_test);
     ExeStatus *e_st = read_exe_st();
     while (1)
@@ -110,6 +110,15 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test){
 
             break;
         }
+
+        if (tpc_fd != NULL) // 表明有打开的trace log文件，使能了trace pc的功能
+        {
+            if (fprintf(tpc_fd,"0x%x\n",(MXLEN_T)pc) < 0)
+            {
+                printf("Warning! found error during writing log file of Trace PC");
+            }
+        }
+
 
         // prepare for next instruction
         iid +=1;

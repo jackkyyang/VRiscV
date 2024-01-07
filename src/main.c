@@ -149,7 +149,7 @@ int arguments_parse(int argc, char* argv[]){
             break;
 
           default:
-            printf("?? getopt returned character code 0%o ??\n", iarg);
+            printf("Warning! getopt returned character code: [%s]\n", (char*)(&iarg));
         }
     }
     // 打印不能被解析的参数
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]){
     double time_cost;
     double ips = 0;
     uint64_t INST_NUM = 0;
-
+    FILE* tpc_fd = NULL;
     arguments_parse(argc,argv);
 
     memory_init(DRAM128MB);
@@ -204,11 +204,21 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
+    if (tracepc)
+    {
+        tpc_fd = fopen(tracepc_logfile,"w");
+        if (tpc_fd == NULL)
+        {
+            printf("Error! Cannot open PC trace log: %s\n",tracepc_logfile);
+            return 0;
+        }
+    }
+
 
 
     print_localtime();
     begin = clock();
-    INST_NUM = cpu_run(timeout_num,entry_addr,self_test);
+    INST_NUM = cpu_run(timeout_num,entry_addr,self_test,tpc_fd);
     end = clock();
 
     time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
@@ -220,8 +230,10 @@ int main(int argc, char* argv[]){
         free((void*)self_test_file);
     if (bootloader)
         free((void*)bootloader_file);
-    if (tracepc)
+    if (tracepc) {
         free((void*)tracepc_logfile);
+        fclose(tpc_fd);
+    }
 
     printf("--------------------------------\n");
     printf("%lu Instructions Simulated!\n",INST_NUM);
