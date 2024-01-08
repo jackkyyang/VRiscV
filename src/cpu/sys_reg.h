@@ -52,6 +52,7 @@ SOFTWARE.
     void sys_reg_reset();
 
     void ecall_trap();
+    void ebreak_trap();
     void mret_proc();
 
 #endif //__SYS_REG_H__

@@ -424,7 +424,7 @@ static inline void ecall(){
     ecall_trap(); // 执行trap操作，在其中设置好了next_pc
 }
 static inline void ebreak(){
-    uop();
+    ebreak_trap();
 }
 static inline void mret(){
     ExeStatus *e_st = read_exe_st();

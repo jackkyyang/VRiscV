@@ -815,6 +815,12 @@ void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
     e_st->next_mode = M;
 }
 
+void ebreak_trap()
+{
+    CPUMode curr_mode = get_cpu_mode();
+    trap2m(0,3,curr_mode);
+}
+
 void ecall_trap()
 {
     CPUMode curr_mode = get_cpu_mode();
