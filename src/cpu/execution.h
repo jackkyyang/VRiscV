@@ -25,6 +25,8 @@ static inline DMXLEN_ST mulsigned_ext(MXLEN_T source){
 
 // 处理不对齐的target PC，必须在指令跳转之前完成处理
 // 且错误的指令不能执行
+// 详情见：The RISC-V Instruction Set Manual: Volume II
+// 3.1.15. Machine Cause Register (mcause)
 static inline uint8_t misaligned_target_check(MXLEN_T next_pc){
     MXLEN_T align_msk;
     if (IALIGN == 32)
@@ -346,7 +348,11 @@ static inline void jal(uint8_t rd, int32_t imm){
 }
 static inline void jalr(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
-    next_pc = addr_calc(r1,imm);
+
+    // JALR在计算target时需要忽略最低bit
+    // 见The RISC-V Instruction Set Manual Volume I. Unprivileged Architecture
+    // 2.5. Control Transfer Instructions章节
+    next_pc = addr_calc(r1,imm) & ((MXLEN_T)0xfffffffffffe);
 
     if (misaligned_target_check(next_pc))
         return;
