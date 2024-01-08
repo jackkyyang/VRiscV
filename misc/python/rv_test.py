@@ -45,9 +45,9 @@ if __name__ == "__main__":
 
     test_set = [
             "rv32ui-p",
-            "rv32um_p",
-            "rv32mi_p",
-            "rv32ua_p"
+            "rv32um-p",
+            "rv32mi-p",
+            "rv32ua-p"
             ]
 
     parser = argparse.ArgumentParser("Take RV tests")

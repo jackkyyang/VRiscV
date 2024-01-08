@@ -15,6 +15,14 @@ static inline MXLEN_ST signed_ext(MXLEN_T source, uint8_t sign_loc){
     return result;
 }
 
+static inline DMXLEN_ST mulsigned_ext(MXLEN_T source){
+    uint8_t sign_loc = (uint8_t)(sizeof(MXLEN_T) * 8) -1;
+    MXLEN_T top_bit = source >> sign_loc;
+    DMXLEN_ST sign_ext_mask = (DMXLEN_ST)(0xffffffffffffffff << (sign_loc + 1));
+    DMXLEN_ST result = (top_bit >= 1) ? (DMXLEN_ST)(source|sign_ext_mask) : (DMXLEN_ST)source;
+    return result;
+}
+
 static inline MXLEN_T addr_calc(MXLEN_T source, int32_t imm){
         // 相当于AGU
         MXLEN_ST abs_imm = (MXLEN_ST)(-imm);
@@ -33,24 +41,24 @@ static inline void mul(uint8_t rd, uint8_t rs1, uint8_t rs2){
 }
 
 static inline void mulh(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    DMXLEN_ST r1 = (DMXLEN_ST)(x[rs1]);
-    DMXLEN_ST r2 = (DMXLEN_ST)(x[rs2]);
+    DMXLEN_ST r1 = mulsigned_ext(x[rs1]);
+    DMXLEN_ST r2 = mulsigned_ext(x[rs2]);
     if (rd != 0)
-        x[rd] = (MXLEN_T)((r1 * r2) & 0xffffffff00000000 >> 32);
+        x[rd] = (MXLEN_T)(((r1 * r2) & 0xffffffff00000000) >> 32);
 }
 
 static inline void mulhsu(uint8_t rd, uint8_t rs1, uint8_t rs2){
-    DMXLEN_ST r1 = (DMXLEN_ST)(x[rs1]);
+    DMXLEN_ST r1 = mulsigned_ext(x[rs1]);
     DMXLEN_T  r2 = (DMXLEN_T)(x[rs2]);
     if (rd != 0)
-        x[rd] = (MXLEN_T)((r1 * r2) & 0xffffffff00000000 >> 32);
+        x[rd] = (MXLEN_T)(((r1 * r2) & 0xffffffff00000000) >> 32);
 }
 
 static inline void mulhu(uint8_t rd, uint8_t rs1, uint8_t rs2){
     DMXLEN_T r1 = (DMXLEN_T)(x[rs1]);
     DMXLEN_T r2 = (DMXLEN_T)(x[rs2]);
     if (rd != 0)
-        x[rd] = (MXLEN_T)((r1 * r2) & 0xffffffff00000000 >> 32);
+        x[rd] = (MXLEN_T)(((r1 * r2) & 0xffffffff00000000) >> 32);
 }
 
 static inline void div(uint8_t rd, uint8_t rs1, uint8_t rs2){
