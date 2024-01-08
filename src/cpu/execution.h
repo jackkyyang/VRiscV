@@ -88,7 +88,7 @@ static inline void rem(uint8_t rd, uint8_t rs1, uint8_t rs2){
     MXLEN_ST r2 = (MXLEN_ST)(x[rs2]);
 
     if (r2 == 0)
-        x[rd] = (MXLEN_T)(0xffffffffffffffff);
+        x[rd] = (MXLEN_T)r1;
     else if (r1 == 0x80000000 && r2 == -1)
         x[rd] = 0;
     else if (rd != 0)
@@ -100,7 +100,7 @@ static inline void remu(uint8_t rd, uint8_t rs1, uint8_t rs2){
     MXLEN_T r2 = (MXLEN_T)(x[rs2]);
 
     if (r2 == 0)
-        x[rd] = (MXLEN_T)(0xffffffffffffffff);
+        x[rd] = r1;
     else if (rd != 0)
         x[rd] = (MXLEN_T)(r1%r2);
 }
