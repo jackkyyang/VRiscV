@@ -72,17 +72,14 @@ void instruction_execute(ExeParam *exe_param)
     e_st->inst = (MXLEN_T)inst;
     clear_flags();
 
+    // 处理取指过程中的异常
     if (exe_param->fetch_status->err_id > 0)
     {
-        if (exe_param->fetch_status->err_id == 4){
-            e_st->exception = 1;
-            e_st->ecause.instruction_address_misaligned = 1;
-        }
         exe_param->fetch_status->err_id = 0;
     }
-    else { // 没有取指错误的时候才执行指令
-        decode(inst,e_st);
-    }
+
+
+    decode(inst,e_st);
 
 
     if (x[0] != 0) printf("Error! Cannot write value to X0!");
@@ -122,17 +119,19 @@ void instruction_execute(ExeParam *exe_param)
             printf("Error Cannot find the exception cause!");
     }
 
-
-    if (e_st->branch) { // 处理分支指令
-        e_st->next_pc = next_pc;
-        e_st->branch = 0;
-    } else if (e_st->exception || e_st->mret) {
+    if (e_st->exception || e_st->mret) {
         // next_pc是由异常处理函数计算出来的，已经更新到e_st中
         next_pc = e_st->next_pc;
         e_st->exception = 0;
+        e_st->branch = 0;
         e_st->mret = 0;
         memset(&(e_st->ecause), 0, sizeof(ECause));
-    } else {
+    }
+    else if (e_st->branch) { // 处理分支指令
+        e_st->next_pc = next_pc;
+        e_st->branch = 0;
+    }
+    else {
         e_st->next_pc = pc + 4;
     }
 

@@ -49,7 +49,6 @@ typedef struct fetch_status
     // 1：访问了不存在的地址
     // 2：对于某些设备，发生了地址不对齐的访问
     // 3：跨设备访问
-    // 4: misaligned instruction fetch address
     uint32_t err_id;
 } FetchStatus;
 

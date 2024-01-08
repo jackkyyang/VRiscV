@@ -38,10 +38,5 @@ void instruction_fetch(FetchParam* fetch_param, uint32_t* inst_buf)
     }
     else {
         f_st_ptr->inst_num = FETCH_NUM;
-        if ((fetch_param->pc & 0b11) > 0) // 不对齐的PC
-        {
-            f_st_ptr->err_id = 4;
-        }
-
     }
 }

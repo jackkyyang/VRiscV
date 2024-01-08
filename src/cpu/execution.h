@@ -23,6 +23,26 @@ static inline DMXLEN_ST mulsigned_ext(MXLEN_T source){
     return result;
 }
 
+// 处理不对齐的target PC，必须在指令跳转之前完成处理
+// 且错误的指令不能执行
+static inline uint8_t misaligned_target_check(MXLEN_T next_pc){
+    MXLEN_T align_msk;
+    if (IALIGN == 32)
+        align_msk = 0b11;
+    else
+        align_msk = 0b01;
+
+    if ((next_pc & align_msk) > 0) {
+        // 发现misaligned address
+        ExeStatus *e_st = get_exe_st_ptr();
+        e_st->exception = 1;
+        e_st->ecause.instruction_address_misaligned = 1;
+        return 1;
+    }
+    else
+        return 0;
+}
+
 static inline MXLEN_T addr_calc(MXLEN_T source, int32_t imm){
     // 相当于AGU
     MXLEN_ST abs_imm = (MXLEN_ST)(-imm);
@@ -244,6 +264,7 @@ static inline void beq(uint8_t rs1, uint8_t rs2, int32_t imm){
     } else {
         next_pc = (MXLEN_T)(pc + 4);
     }
+    misaligned_target_check(next_pc);
 
 }
 static inline void bne(uint8_t rs1, uint8_t rs2, int32_t imm){
@@ -257,6 +278,7 @@ static inline void bne(uint8_t rs1, uint8_t rs2, int32_t imm){
     } else {
         next_pc = (MXLEN_T)(pc + 4);
     }
+    misaligned_target_check(next_pc);
 }
 static inline void blt(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_ST r1 = (MXLEN_ST)(x[rs1]);
@@ -269,6 +291,7 @@ static inline void blt(uint8_t rs1, uint8_t rs2, int32_t imm){
     } else {
         next_pc = (MXLEN_T)(pc + 4);
     }
+    misaligned_target_check(next_pc);
 }
 static inline void bgt(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_ST r1 = (MXLEN_ST)(x[rs1]);
@@ -281,6 +304,7 @@ static inline void bgt(uint8_t rs1, uint8_t rs2, int32_t imm){
     } else {
         next_pc = (MXLEN_T)(pc + 4);
     }
+    misaligned_target_check(next_pc);
 }
 static inline void bltu(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
@@ -292,6 +316,7 @@ static inline void bltu(uint8_t rs1, uint8_t rs2, int32_t imm){
     } else {
         next_pc = (MXLEN_T)(pc + 4);
     }
+    misaligned_target_check(next_pc);
 }
 static inline void bgeu(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
@@ -304,12 +329,16 @@ static inline void bgeu(uint8_t rs1, uint8_t rs2, int32_t imm){
     } else {
         next_pc = (MXLEN_T)(pc + 4);
     }
+    misaligned_target_check(next_pc);
 }
 // unconditional branch
 static inline void jal(uint8_t rd, int32_t imm){
 
     MXLEN_ST abs_imm = - imm;
     next_pc = addr_calc(pc,imm);
+
+    if (misaligned_target_check(next_pc))
+        return;
 
     if (rd != 0)
         x[rd] = (MXLEN_T)(pc + 4);
@@ -318,6 +347,9 @@ static inline void jal(uint8_t rd, int32_t imm){
 static inline void jalr(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     next_pc = addr_calc(r1,imm);
+
+    if (misaligned_target_check(next_pc))
+        return;
 
     if (rd != 0)
         x[rd] = (MXLEN_T)(pc + 4);

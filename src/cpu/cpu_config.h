@@ -38,6 +38,7 @@ typedef enum {
 
 typedef uint8_t FetchWidth;
 
+#define IALIGN 32 //不支持压缩指令集，PC必须是4-byte对齐
 
 #ifdef RV64
     #define MXLEN 64;
