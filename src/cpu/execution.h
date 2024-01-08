@@ -475,6 +475,7 @@ static inline int csr_check(CSRFeild csr_id,int write){
 static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
     MXLEN_T read_data,write_data;
     CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    MXLEN_T r1 = (MXLEN_T)(x[rs1]); // rs1原值
     // 检查指令是否合法，包括
     // 1. 检查读写权限
     // 2. 检查是否访问了高级别的寄存器
@@ -482,17 +483,18 @@ static inline void csrrw(uint8_t rd, uint8_t rs1, uint32_t csr){
         return;
 
     csr_read(csr,&read_data);
-    if (rd != 0) // 如果rd==0，不写寄存器
+    if (rd != 0) // 如果rd==0，只读操作，不改变gpr
     {
         x[rd] = read_data;
     }
     // rw一定会写入
-    write_data = x[rs1];
+    write_data = r1; // 注意！！这里一定是原始的rs1中的值，不能是x[rs1]
     csr_write(csr,write_data);
 }
 static inline void csrrs(uint8_t rd, uint8_t rs1, uint32_t csr){
     MXLEN_T read_data,write_msk,write_data;
     CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    MXLEN_T r1 = (MXLEN_T)(x[rs1]); // rs1原值
 
     // 检查指令是否合法，包括
     // 1. 检查读写权限
@@ -507,7 +509,7 @@ static inline void csrrs(uint8_t rd, uint8_t rs1, uint32_t csr){
     }
     if (rs1 != 0) // 如果rs==0，不写CSR
     {
-        write_msk = x[rs1];
+        write_msk = r1;
         write_data = read_data | write_msk; // 将mask中为1的bit置1
         csr_write(csr,write_data);
     }
@@ -516,6 +518,7 @@ static inline void csrrs(uint8_t rd, uint8_t rs1, uint32_t csr){
 static inline void csrrc(uint8_t rd, uint8_t rs1, uint32_t csr){
     MXLEN_T read_data,write_msk,write_data;
     CSRFeild csr_id = INT2STRUCT(CSRFeild,csr);
+    MXLEN_T r1 = (MXLEN_T)(x[rs1]); // rs1原值
 
     // 检查指令是否合法，包括
     // 1. 检查读写权限
@@ -530,7 +533,7 @@ static inline void csrrc(uint8_t rd, uint8_t rs1, uint32_t csr){
     }
     if (rs1 != 0) // 如果rs==0，不写CSR
     {
-        write_msk = x[rs1];
+        write_msk = r1;
         write_data = read_data & (~write_msk); // 将mask中为1的bit清零
         csr_write(csr,write_data);
     }
