@@ -24,12 +24,12 @@ static inline DMXLEN_ST mulsigned_ext(MXLEN_T source){
 }
 
 static inline MXLEN_T addr_calc(MXLEN_T source, int32_t imm){
-        // 相当于AGU
-        MXLEN_ST abs_imm = (MXLEN_ST)(-imm);
-        if (imm > 0)
-            return source + (MXLEN_T)imm;
-        else
-            return source - (MXLEN_T)(abs_imm);
+    // 相当于AGU
+    MXLEN_ST abs_imm = (MXLEN_ST)(-imm);
+    if (imm > 0)
+        return source + (MXLEN_T)imm;
+    else
+        return source - (MXLEN_T)(abs_imm);
 }
 
 // reg op
@@ -407,7 +407,8 @@ static inline void auipc(uint8_t rd, int32_t imm){
 }
 // system
 static inline void ecall(){
-    ExeStatus *e_st = read_exe_st();
+    ExeStatus *e_st = get_exe_st_ptr();
+    CPUMode curr_mode = get_cpu_mode();
     if (e_st->self_test)
     {
         // 自测模式，如果a0为0，则自测pass，否则fail
@@ -421,21 +422,32 @@ static inline void ecall(){
         return;
     }
 
-    ecall_trap(); // 执行trap操作，在其中设置好了next_pc
+    e_st->exception = 1;
+    if (curr_mode == U)
+        e_st->ecause.ecall_from_u = 1;
+    #ifdef S_MODE
+    else if (curr_mode == M)
+        e_st->ecause.ecall_from_s = 1;
+    #endif
+    else if (curr_mode == M)
+        e_st->ecause.ecall_from_m = 1;
+
 }
 static inline void ebreak(){
-    ebreak_trap();
+    ExeStatus *e_st = get_exe_st_ptr();
+    e_st->exception = 1;
+    e_st->ecause.ecall_breakpoint = 1;
 }
 static inline void mret(){
-    ExeStatus *e_st = read_exe_st();
+    ExeStatus *e_st = get_exe_st_ptr();
     CPUMode curr_mode = get_cpu_mode();
-    if (curr_mode != M)
-    {
+    if (curr_mode != M){
         //如果在非M模式下执行，直接报异常
-        raise_illegal_instruction(curr_mode,e_st->inst);
+        e_st->exception = 1;
+        e_st->ecause.illegal_instruction = 1;
         return;
     }
-    // 执行MRET指令
+    e_st->mret = 1;
     mret_proc();
 }
 static inline void wfi(){
@@ -443,7 +455,7 @@ static inline void wfi(){
 }
 
 static inline int csr_check(CSRFeild csr_id,int write){
-    ExeStatus *e_st = read_exe_st();
+    ExeStatus *e_st = get_exe_st_ptr();
     CPUMode curr_mode = get_cpu_mode();
     int err_flag = 0;
     // 检查是否访问了高权限寄存器
@@ -466,7 +478,8 @@ static inline int csr_check(CSRFeild csr_id,int write){
 
     if (err_flag == 1)
     {
-        raise_illegal_instruction(curr_mode,e_st->inst);
+        e_st->exception =1;
+        e_st->ecause.illegal_instruction =1;
     }
 
     return err_flag;
@@ -613,7 +626,8 @@ static inline void fence_i(){
 }
 // Undefined
 static inline void undef(){
-    ExeStatus *e_st = read_exe_st();
-    raise_illegal_instruction(get_cpu_mode(),e_st->inst);
+    ExeStatus *e_st = get_exe_st_ptr();
+    e_st->exception =1;
+    e_st->ecause.illegal_instruction =1;
 }
 #endif //__EXECUTION_H__

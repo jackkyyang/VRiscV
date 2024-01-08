@@ -780,7 +780,6 @@ void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
     mcause.exception_code = e_code;
 
     ExeStatus *e_st = get_exe_st_ptr();
-    e_st->exception = 1;
     // 保存异常现场
     // 异常PC
     mepc = e_st->curr_pc;
@@ -815,31 +814,6 @@ void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
     e_st->next_mode = M;
 }
 
-void ebreak_trap()
-{
-    CPUMode curr_mode = get_cpu_mode();
-    trap2m(0,3,curr_mode);
-}
-
-void ecall_trap()
-{
-    CPUMode curr_mode = get_cpu_mode();
-    if (curr_mode == U)
-    {
-        trap2m(0,8,curr_mode);
-    }
-    #ifdef S_MODE
-    else if (curr_mode == M)
-    {
-        trap2m(0,9,curr_mode);
-    }
-    #endif
-    else if (curr_mode == M)
-    {
-        trap2m(0,11,curr_mode);
-    }
-}
-
 //
 void raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst){
     trap2m(0,2,curr_mode);
@@ -852,7 +826,6 @@ void mret_proc(){
     ExeStatus *e_st = get_exe_st_ptr();
     mstatus.mie = mstatus.mpie;
     mstatus.mpie = 1;
-    e_st->exception = 1;
     if (mstatus.mpp == 0)
     {
         e_st->next_mode = U;

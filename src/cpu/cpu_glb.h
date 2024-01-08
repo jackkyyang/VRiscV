@@ -45,9 +45,32 @@ typedef enum cpu_mode{
 typedef struct fetch_status
 {
     FetchWidth inst_num;
-    // 见 get_ifu_fault();
+    // 0：无错误
+    // 1：访问了不存在的地址
+    // 2：对于某些设备，发生了地址不对齐的访问
+    // 3：跨设备访问
+    // 4: misaligned instruction fetch address
     uint32_t err_id;
 } FetchStatus;
+
+typedef struct exception_cause_t
+{
+    uint8_t instruction_address_misaligned;
+    uint8_t instruction_access_fault;
+    uint8_t illegal_instruction;
+    uint8_t ifetch_breakpoint;
+    uint8_t ecall_breakpoint;
+    uint8_t lsu_breakpoint;
+    uint8_t load_access_fault;
+    uint8_t store_amo_address_misaligned;
+    uint8_t store_access_fault;
+    uint8_t ecall_from_u;
+    uint8_t ecall_from_s;
+    uint8_t ecall_from_m;
+    uint8_t instruction_page_fault;
+    uint8_t load_page_fault;
+    uint8_t store_amo_page_fault;
+} ECause;
 
 typedef struct execute_status
 {
@@ -59,10 +82,11 @@ typedef struct execute_status
     uint8_t self_test;
     MXLEN_T next_pc;// 下一个指令的PC
     MXLEN_T curr_pc;// 当前指令的PC
-
     CPUMode next_mode; // 用于切换模式
     uint8_t branch; // 用于分支跳转
     uint8_t exception; //用于处理异常
+    ECause ecause;
+    uint8_t mret; // 用于处理mret指令
     MXLEN_T inst; // 指令内容，异常时写入mtval
 
 } ExeStatus;
@@ -71,8 +95,6 @@ ExeStatus*      get_exe_st_ptr();
 ExeStatus*      read_exe_st();
 // 存放取指结果
 FetchStatus*    get_fet_st_ptr();
-void            raise_iinstr_excp(uint64_t cause);
 CPUMode         get_cpu_mode();
 void            set_cpu_mode(CPUMode next_mode);
-void            raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst);
 #endif // __CPU_GLB_H__

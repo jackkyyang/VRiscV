@@ -63,6 +63,8 @@ static void clear_flags(){
 void instruction_execute(ExeParam *exe_param)
 {
     ExeStatus *e_st = get_exe_st_ptr();
+    CPUMode curr_mode = get_cpu_mode();
+
     e_st->curr_pc = exe_param->pc;
     pc           = exe_param->pc;
     // decode
@@ -70,17 +72,66 @@ void instruction_execute(ExeParam *exe_param)
     e_st->inst = (MXLEN_T)inst;
     clear_flags();
 
-    decode(inst,e_st);
+    if (exe_param->fetch_status->err_id > 0)
+    {
+        if (exe_param->fetch_status->err_id == 4){
+            e_st->exception = 1;
+            e_st->ecause.instruction_address_misaligned = 1;
+        }
+        exe_param->fetch_status->err_id = 0;
+    }
+    else { // 没有取指错误的时候才执行指令
+        decode(inst,e_st);
+    }
+
 
     if (x[0] != 0) printf("Error! Cannot write value to X0!");
+
+    // 按优先级选择异常
+    if (e_st->exception){
+        if (e_st->ecause.ifetch_breakpoint)
+            trap2m(0,3,curr_mode);
+        else if (e_st->ecause.instruction_page_fault)
+            trap2m(0,12,curr_mode);
+        else if (e_st->ecause.instruction_access_fault)
+            trap2m(0,1,curr_mode);
+        else if (e_st->ecause.illegal_instruction){
+            raise_illegal_instruction(curr_mode,(MXLEN_T)inst);
+        }
+        else if (e_st->ecause.instruction_address_misaligned)
+            trap2m(0,0,curr_mode);
+        else if (e_st->ecause.ecall_from_u)
+            trap2m(0,8,curr_mode);
+        else if (e_st->ecause.ecall_from_s)
+            trap2m(0,9,curr_mode);
+        else if (e_st->ecause.ecall_from_m)
+            trap2m(0,11,curr_mode);
+        else if (e_st->ecause.ecall_breakpoint)
+            trap2m(0,3,curr_mode);
+        else if (e_st->ecause.lsu_breakpoint)
+            trap2m(0,3,curr_mode);
+        else if (e_st->ecause.load_page_fault)
+            trap2m(0,13,curr_mode);
+        else if (e_st->ecause.store_amo_page_fault)
+            trap2m(0,15,curr_mode);
+        else if (e_st->ecause.load_access_fault)
+            trap2m(0,5,curr_mode);
+        else if (e_st->ecause.store_access_fault)
+            trap2m(0,7,curr_mode);
+        else
+            printf("Error Cannot find the exception cause!");
+    }
+
 
     if (e_st->branch) { // 处理分支指令
         e_st->next_pc = next_pc;
         e_st->branch = 0;
-    } else if (e_st->exception) {
+    } else if (e_st->exception || e_st->mret) {
         // next_pc是由异常处理函数计算出来的，已经更新到e_st中
         next_pc = e_st->next_pc;
         e_st->exception = 0;
+        e_st->mret = 0;
+        memset(&(e_st->ecause), 0, sizeof(ECause));
     } else {
         e_st->next_pc = pc + 4;
     }

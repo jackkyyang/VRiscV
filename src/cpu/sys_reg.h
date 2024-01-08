@@ -28,6 +28,7 @@ SOFTWARE.
 
     #include <stdint.h>
     #include "cpu_config.h"
+    #include "cpu_glb.h"
 
     typedef struct csr_feild
     {
@@ -50,9 +51,8 @@ SOFTWARE.
     void instreth_inc(uint64_t ins_num);
 
     void sys_reg_reset();
-
-    void ecall_trap();
-    void ebreak_trap();
+    void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode);
     void mret_proc();
+    void raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst);
 
 #endif //__SYS_REG_H__

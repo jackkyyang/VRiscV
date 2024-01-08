@@ -46,12 +46,6 @@ FetchStatus *get_fet_st_ptr()
     return &cpu_fet_status;
 }
 
-void raise_iinstr_excp(uint64_t cause)
-{
-    cpu_exe_status.exception = 1;
-    // TODO
-}
-
 CPUMode get_cpu_mode()
 {
     return cpu_mode;
