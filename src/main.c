@@ -33,6 +33,7 @@ SOFTWARE.
 #include "utils/simple_loader.h"
 #include "utils/str_tools.h"
 #include "include/comm.h"
+#include "include/config.h"
 
 
 #define RESET_ADDR 0x80000000
@@ -112,7 +113,7 @@ int arguments_parse(int argc, char* argv[]){
             break;
 
           case 'v': // Version
-            printf("VRiscV  0.1.0\n");
+            printf("VRiscV  %s\n",PROJECT_VERSION);
             non_func = 1;
             break;
 

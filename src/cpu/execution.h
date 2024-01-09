@@ -66,14 +66,14 @@ static inline void mulh(uint8_t rd, uint8_t rs1, uint8_t rs2){
     DMXLEN_ST r1 = mulsigned_ext(x[rs1]);
     DMXLEN_ST r2 = mulsigned_ext(x[rs2]);
     if (rd != 0)
-        x[rd] = (MXLEN_T)(((r1 * r2) & 0xffffffff00000000) >> 32);
+        x[rd] = (MXLEN_T)(((r1 * r2) & DMXLEN_HMSK) >> 32);
 }
 
 static inline void mulhsu(uint8_t rd, uint8_t rs1, uint8_t rs2){
     DMXLEN_ST r1 = mulsigned_ext(x[rs1]);
     DMXLEN_T  r2 = (DMXLEN_T)(x[rs2]);
     if (rd != 0)
-        x[rd] = (MXLEN_T)(((r1 * r2) & 0xffffffff00000000) >> 32);
+        x[rd] = (MXLEN_T)(((r1 * r2) & DMXLEN_HMSK) >> 32);
 }
 
 static inline void mulhu(uint8_t rd, uint8_t rs1, uint8_t rs2){
