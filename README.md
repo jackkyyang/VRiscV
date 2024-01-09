@@ -1,4 +1,5 @@
 # VRsicV
+[![Build](https://github.com/jackkyyang/VRiscV/actions/workflows/cmake-single-platform.yml/badge.svg?branch=main)](https://github.com/jackkyyang/VRiscV/actions/workflows/cmake-single-platform.yml)
 
 RSICV 体系结构虚拟机，用来仿真RSICV CPU和设备，基本目标是能用来启动一个真实的操作系统
 
