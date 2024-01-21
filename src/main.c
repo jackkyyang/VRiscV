@@ -30,6 +30,7 @@ SOFTWARE.
 
 #include "cpu/cpu.h"
 #include "dev/memory.h"
+#include "dev/display.h"
 #include "utils/simple_loader.h"
 #include "utils/str_tools.h"
 #include "include/comm.h"
@@ -219,12 +220,16 @@ int main(int argc, char* argv[]){
         }
     }
 
-
-
+    // ------------------------------------------
+    // 启动CPU
+    // ------------------------------------------
     print_localtime();
     begin = clock();
     INST_NUM = cpu_run(timeout_num,entry_addr,self_test,tpc_fd);
     end = clock();
+    // ------------------------------------------
+    // CPU 任务结束
+    // ------------------------------------------
 
     time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
     ips = (double)(INST_NUM)/time_cost;
