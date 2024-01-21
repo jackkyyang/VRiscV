@@ -1,4 +1,5 @@
 # VRsicV
+
 [![Build](https://github.com/jackkyyang/VRiscV/actions/workflows/build.yml/badge.svg)](https://github.com/jackkyyang/VRiscV/actions/workflows/build.yml)
 
 RSICV 体系结构虚拟机，用来仿真RSICV CPU和设备，基本目标是能用来启动一个真实的操作系统
@@ -11,6 +12,12 @@ RSICV 体系结构虚拟机，用来仿真RSICV CPU和设备，基本目标是�
 4. 串口
 5. 硬盘
 6. BootROM
+
+## 安装依赖
+
+```
+sudo apt-get install pkg-config libgtk3-dev
+```
 
 ## 开发计划
 
