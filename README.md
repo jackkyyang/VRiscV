@@ -16,7 +16,7 @@ RSICV 体系结构虚拟机，用来仿真RSICV CPU和设备，基本目标是�
 ## 安装依赖
 
 ```
-sudo apt-get install pkg-config libgtk3-dev
+sudo apt-get install pkg-config libgtk-3-dev
 ```
 
 ## 开发计划
