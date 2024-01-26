@@ -120,16 +120,29 @@ static void enter_callback(GtkWidget *widget,gpointer data)
 
 }
 
-void screen_init()
+static int time_cnt = 0;
+static gboolean do_timer( gpointer* null)
+{
+    gchar buf[64];
+
+    time_cnt +=1;
+
+    int len = sprintf(buf,"%d",time_cnt);
+
+    display(buf,(gint)len);
+
+    return TRUE;//尽量返回TRUE
+}
+
+void* screen_init(void* arg)
 {
 
     struct window_size_t win_size = {1024,800};
 
-    //初始化命令行参数
-    int argc = 1;
     char* title = "Virtual Screen";
-    char* argv[] = {title};
-    gtk_init(&argc,(char ***)(&argv));
+
+    //GTK组件
+    gtk_init(0,NULL);
 
     //---------------------------------------------
     //主窗口
@@ -231,10 +244,16 @@ void screen_init()
     // 在输入Enter的时候，调用该函数
     g_signal_connect (entry, "activate", G_CALLBACK (enter_callback), NULL);
 
+    // 绑定定时器
+    guint timer = g_timeout_add(1000, (GSourceFunc)do_timer, NULL);
+
     // 所有空间默认隐藏，设置显示窗口和其中所有控件
     gtk_widget_show_all(window);
 
     // 主事件循环
     gtk_main();
-    return;
+
+    //删除定时器
+    g_source_remove(timer);
+
 }

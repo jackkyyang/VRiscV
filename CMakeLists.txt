@@ -4,8 +4,11 @@ project(VRiscV VERSION 0.1.0 LANGUAGES C)
 
 # 使用pkg-config
 find_package(PkgConfig REQUIRED)
+# 指定多线程库
+find_package(Threads)
 
-add_executable(VRiscV)
+MESSAGE(STATUS "Project Name: " ${PROJECT_NAME})
+add_executable(${PROJECT_NAME})
 
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 
@@ -31,13 +34,13 @@ endif()
 link_directories(${GTK_LIBRARY_DIRS})
 
 # 指定头文件路径
-target_include_directories(VRiscV PUBLIC ${GTK_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${GTK_INCLUDE_DIRS})
 
 #指定连接库名称
-target_link_libraries(VRiscV ${GTK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GTK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # 指定源文件
-target_sources(VRiscV PUBLIC ${sources})
+target_sources(${PROJECT_NAME} PUBLIC ${sources})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 

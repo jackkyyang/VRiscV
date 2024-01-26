@@ -28,6 +28,8 @@ SOFTWARE.
 #include <string.h>
 #include <getopt.h>
 
+#include <pthread.h>
+
 #include "cpu/cpu.h"
 #include "dev/memory.h"
 #include "dev/display.h"
@@ -182,17 +184,6 @@ int main(int argc, char* argv[]){
     FILE* tpc_fd = NULL;
     arguments_parse(argc,argv);
 
-    memory_init(DRAM128MB);
-
-    if (self_test){
-        // 必须在初始化memory之后才能加载可执行文件
-        entry_addr = simple_loader(self_test_file);
-        // 清理历史log
-        FILE* st_fd = fopen("./self_test_result.log","w");
-        fprintf(st_fd,"0");
-        fclose(st_fd);
-    }
-
     // ----------------------------------
     // 检查参数
     // ----------------------------------
@@ -202,38 +193,83 @@ int main(int argc, char* argv[]){
     if (timeout_num == 0){
         return 0;
     }
-    if (entry_addr == ERR_ADDR) {
-        return 0;
-    }
+
     if (self_test== 0 && bootloader == 0){
         printf("Error! Must set the bootloader or self-test file!\n");
         return 0;
     }
 
+    //------------------------------------
+    // 开启显示进程
+    //------------------------------------
+    pthread_t tid;
+    int t_creat_result = pthread_create(&tid,NULL,screen_init,NULL);
+    if (t_creat_result)
+    {
+        //线程创建错误
+        printf("Found Error during pthread_creat, code is [%d]\n",t_creat_result);
+        return 0;
+    }
+    printf("Start Display thread, tid is [%lX]\n",tid);
+
+
+    // ------------------------------------------
+    // 启动CPU
+    // ------------------------------------------
+    // 初始化配置环境
+    int init_err_flag = 0;
+
+    // 建立trace PC 文件
     if (tracepc)
     {
         tpc_fd = fopen(tracepc_logfile,"w");
         if (tpc_fd == NULL)
         {
             printf("Error! Cannot open PC trace log: %s\n",tracepc_logfile);
-            return 0;
+            init_err_flag = 1;
         }
     }
 
-    // ------------------------------------------
-    // 启动CPU
-    // ------------------------------------------
-    print_localtime();
-    begin = clock();
-    INST_NUM = cpu_run(timeout_num,entry_addr,self_test,tpc_fd);
-    end = clock();
-    // ------------------------------------------
-    // CPU 任务结束
-    // ------------------------------------------
+    // 初始化主存，必须在load 自测文件之前
+    memory_init();
+    if (self_test){
+        // 必须在初始化memory之后才能加载可执行文件
+        entry_addr = simple_loader(self_test_file);
+        // 清理历史log
+        FILE* st_fd = fopen("./self_test_result.log","w");
+        fprintf(st_fd,"0");
+        fclose(st_fd);
+    }
 
-    time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
-    ips = (double)(INST_NUM)/time_cost;
+    if (entry_addr == ERR_ADDR) {
+        init_err_flag = 2;
+    }
 
+    if (init_err_flag == 0)
+    {
+        // 没有初始化错误
+        print_localtime();
+        begin = clock();
+        INST_NUM = cpu_run(timeout_num,entry_addr,self_test,tpc_fd);
+        end = clock();
+        // CPU 任务结束
+        time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
+        ips = (double)(INST_NUM)/time_cost;
+        printf("--------------------------------\n");
+        printf("%lu Instructions Simulated!\n",INST_NUM);
+        printf("Time Cost: %f\n",time_cost);
+        printf("Instruction Number Per Second: %f\n",ips);
+        printf("--------------------------------\n");
+    }
+    else {
+        printf("--------------------------------\n");
+        printf("Init Fail! Fail Code:[%d] \n",init_err_flag);
+        printf("--------------------------------\n");
+    }
+
+    //---------------------------------
+    // 资源回收
+    //---------------------------------
     // 释放申请的内存
     memory_free(); // 对应 memory_init()
     if (self_test)
@@ -245,11 +281,9 @@ int main(int argc, char* argv[]){
         fclose(tpc_fd);
     }
 
-    printf("--------------------------------\n");
-    printf("%lu Instructions Simulated!\n",INST_NUM);
-    printf("Time Cost: %f\n",time_cost);
-    printf("Instruction Number Per Second: %f\n",ips);
-    printf("--------------------------------\n");
+    // 等待线程结束
+    char* retval = NULL;
+    pthread_join(tid,(void**)&retval);
 
     return 0;
 }

@@ -28,17 +28,6 @@ SOFTWARE.
 
 #include <stdint.h>
 
-// Memory Map
-    #define DRAM1MB    (1<<20)
-    #define DRAM128MB  DRAM1MB * 128
-
-    #define DRAM_BASE 0x80000000
-    #define DRAM_END  DRAM_BASE + DRAM128MB - 1
-
-
-
-// End Memory Map
-
 typedef enum {
     CPU_FE  = 0, // Front End in CPU
     CPU_BE  = 1, // Back End in CPU
@@ -52,7 +41,7 @@ typedef struct mem_port
     uint8_t  port_width; // Port的宽度（byte数）
 } MemPort;
 
-void memory_init(uint64_t mem_size);
+void memory_init();
 void memory_free();
 
 // 主存读操作

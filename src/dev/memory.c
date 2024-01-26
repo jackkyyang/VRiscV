@@ -1,4 +1,3 @@
-#include "memory.h"
 /*
 MIT License
 
@@ -33,6 +32,7 @@ SOFTWARE.
 #include <assert.h>
 #include "memory.h"
 #include "mem_pool.h"
+#include "dev_config.h"
 #include "../include/comm.h"
 
 
@@ -59,7 +59,7 @@ typedef struct mem_check
     uint64_t next_page_addr; // 跨页后的地址
 } MCheck;
 
-void memory_init(uint64_t mem_size)
+void memory_init()
 {
     mem_pool_init();
 }

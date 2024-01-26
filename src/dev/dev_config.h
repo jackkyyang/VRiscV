@@ -22,23 +22,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef __DISPLAY_H__
-    #define __DISPLAY_H__
+#ifndef __DEV_CONFIG_H__
+    #define __DEV_CONFIG_H__
 
-    // 启动一个屏幕显示线程
-    void* screen_init(void* arg);
+#define MEM1KB    (1<<10)
+#define MEM1MB    (1<<20)
+#define MEM4KB    (MEM1KB * 4)
+#define MEM8KB    (MEM1KB * 8)
+#define MEM256KB  (MEM1KB * 256)
+#define MEM512KB  (MEM1KB * 512)
+#define MEM128MB  (MEM1MB * 128)
 
-    // 关闭屏幕并退出
-    void screen_close();
-
-    // 向屏幕输出字符串
-    void put_chars(const char* output_data,int len);
-
-    // 获得屏幕宽度
-    int get_screen_width();
-
-    // 获得屏幕高度
-    int get_screen_height();
+#define DRAM_SIZE MEM128MB
+#define SCR_SIZE  MEM256KB
+#define KBD_SIZE  MEM4KB
+#define ROM_SIZE  MEM8KB
 
 
-#endif //__DISPLAY_H__
+// Memory Map
+// 主存
+#define DRAM_BASE 0x80000000
+#define DRAM_END  (DRAM_BASE + DRAM_SIZE - 1)
+
+// 显示设备
+// 显示器地址空间为256KB
+#define SCR_BASE  0x00040000 // 256KB
+#define SCR_END  (SCR_BASE + SCR_SIZE - 1)
+
+
+// 键盘
+// 键盘地址空间为4KB
+#define KBD_BASE  0x00020000 //128KB
+#define KBD_END  (KBD_BASE + KBD_SIZE - 1)
+
+// ROM
+// 容量设置为 8KB
+#define ROM_BASE  0x00000000
+#define ROM_END  (KBD_BASE + ROM_SIZE - 1)
+
+#endif // __DEV_CONFIG_H__
