@@ -49,7 +49,7 @@ void memory_free();
 // byte_num：读取的（byte）数量
 // data_buf: 数据buf，由master指定
 // op_src: 操作来源
-// Return：0 失败，other：成功，且读数据的数量
+// Return：0 成功，other：失败和错误码
 int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_buf);
 
 // 主存写操作
@@ -57,7 +57,7 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_bu
 // byte_num：写取的（byte）数量
 // data_buf: 数据buf，由master指定
 // op_src: 操作来源
-// Return：0 失败，other：成功，且写入数据的数量
+// Return：0 成功，other：失败和错误码
 int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t* data_buf);
 
 // 0：无错误

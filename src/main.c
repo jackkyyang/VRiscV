@@ -33,6 +33,8 @@ SOFTWARE.
 #include "cpu/cpu.h"
 #include "dev/memory.h"
 #include "dev/display.h"
+#include "dev/dev_config.h"
+#include "dev/int_ctrl.h"
 #include "utils/simple_loader.h"
 #include "utils/str_tools.h"
 #include "include/comm.h"
@@ -175,6 +177,17 @@ int arguments_parse(int argc, char* argv[]){
 }
 
 
+// 注册互斥锁
+static pthread_mutex_t screen_mem_mutex;  // 屏幕地址空间锁
+static pthread_mutex_t kbd_mem_mutex;     // 键盘地址空间锁
+static pthread_mutex_t screen_int_mutex;  // 屏幕中断锁
+static pthread_mutex_t kbd_int_mutex;     // 键盘中断锁
+static uint8_t* screen_int_ptr;
+static uint8_t* kbd_int_ptr;
+// 注意，由于共享内存地址和中断指针值要在中断控制器初始化完成后才确定
+// 因此参数需要在main中确定
+static ScreenInitParam screen_param;
+
 int main(int argc, char* argv[]){
 
     clock_t begin, end;
@@ -182,6 +195,8 @@ int main(int argc, char* argv[]){
     double ips = 0;
     uint64_t INST_NUM = 0;
     FILE* tpc_fd = NULL;
+
+
     arguments_parse(argc,argv);
 
     // ----------------------------------
@@ -200,10 +215,48 @@ int main(int argc, char* argv[]){
     }
 
     //------------------------------------
-    // 开启显示进程
+    // 准备初始化设备所需要的资源，包括内存和锁
     //------------------------------------
+    // 初始化互斥锁
+    pthread_mutex_init(&screen_mem_mutex,NULL);
+    pthread_mutex_init(&screen_int_mutex,NULL);
+    pthread_mutex_init(&kbd_mem_mutex,NULL);
+    pthread_mutex_init(&kbd_int_mutex,NULL);
+
+    // 申请设备空间的存储
+    // 对于显示设备的地址，需要实现dual buffer
+    // 一份buffer在设备和CPU之间共享，另一份私有
+    // 每隔一段时间，由显示设备调用memcpy
+    void* screen_mem_base = malloc((size_t)SCR_SIZE); // 默认screen的空间为16KB
+    void* keyboard_mem_base = malloc((size_t)KBD_SIZE); // 默认screen的空间为4KB
+
+    if (screen_mem_base == NULL) {
+        printf("Malloc Error for screen memory!");
+        return 0;
+    }
+    if (keyboard_mem_base == NULL) {
+        printf("Malloc Error for keyboard memory!");
+        return 0;
+    }
+
+    // 注册中断
+    int_init(&screen_int_mutex,&kbd_int_mutex,screen_int_ptr,kbd_int_ptr);
+
+    //------------------------------------
+    // 开启设备进程
+    //------------------------------------
+    // 准备参数
+    screen_param.screen_int_mutex = &screen_int_mutex;
+    screen_param.kbd_int_mutex = &kbd_int_mutex;
+    screen_param.screen_int_ptr = screen_int_ptr;
+    screen_param.kbd_int_ptr = kbd_int_ptr;
+    screen_param.screen_mem_mutex = &screen_mem_mutex;
+    screen_param.kbd_mem_mutex = &kbd_mem_mutex;
+    screen_param.screen_base = screen_mem_base;
+    screen_param.kbd_base = keyboard_mem_base;
+
     pthread_t tid;
-    int t_creat_result = pthread_create(&tid,NULL,screen_init,NULL);
+    int t_creat_result = pthread_create(&tid,NULL,screen_init,&screen_param);
     if (t_creat_result)
     {
         //线程创建错误
@@ -280,10 +333,16 @@ int main(int argc, char* argv[]){
         free((void*)tracepc_logfile);
         fclose(tpc_fd);
     }
-
     // 等待线程结束
     char* retval = NULL;
     pthread_join(tid,(void**)&retval);
-
+    // 在子线程结束后回收共享的内存
+    free(screen_mem_base);
+    free(keyboard_mem_base);
+    // 销毁所有互斥锁
+    pthread_mutex_destroy(&screen_mem_mutex);
+    pthread_mutex_destroy(&screen_int_mutex);
+    pthread_mutex_destroy(&kbd_mem_mutex);
+    pthread_mutex_destroy(&kbd_int_mutex);
     return 0;
 }

@@ -127,7 +127,7 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_bu
 
 
     if (byte_num == 0 || rd_ptr==NULL || mem_check.fault==1)
-        return 0;
+        return 1;
 
     for (uint8_t i = 0; i < mem_check.byte_num; i++)
     {
@@ -143,7 +143,7 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_bu
         }
     }
 
-    return byte_num;
+    return 0;
 
 }
 
@@ -161,7 +161,7 @@ int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_b
     }
 
     if (byte_num == 0 || wr_ptr==NULL || mem_check.fault==1)
-        return 0;
+        return 1;
 
     for (uint8_t i = 0; i < mem_check.byte_num; i++)
     {
@@ -177,5 +177,5 @@ int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_b
         }
     }
 
-    return byte_num;
+    return 0;
 }

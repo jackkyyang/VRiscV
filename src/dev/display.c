@@ -35,6 +35,7 @@ SOFTWARE.
 #include <gtk/gtk.h>
 
 #include "display.h"
+#include "../include/comm.h"
 
 struct window_size_t
 {
@@ -65,6 +66,8 @@ static GtkTextMark* display_end_mark;
 // Textbuffer 指针
 static GtkTextBuffer *textbuffer;
 
+// 线程通信参数
+static ScreenInitParam thread_param;
 
 // 自动滚动到最底层
 static void auto_scroll(){
@@ -134,12 +137,14 @@ static gboolean do_timer( gpointer* null)
     return TRUE;//尽量返回TRUE
 }
 
-void* screen_init(void* arg)
+void* screen_init(void* param)
 {
 
     struct window_size_t win_size = {1024,800};
 
     char* title = "Virtual Screen";
+
+    thread_param = *((ScreenInitParam*)param);
 
     //GTK组件
     gtk_init(0,NULL);

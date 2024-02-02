@@ -22,44 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef __DEV_CONFIG_H__
-    #define __DEV_CONFIG_H__
+#include <stdint.h>
+#include <pthread.h>
 
-    #include <stdint.h>
+#include "dev_bus.h"
 
-#define MEM1KB    (1<<10)
-#define MEM1MB    (1<<20)
-#define MEM4KB    (MEM1KB * 4)
-#define MEM8KB    (MEM1KB * 8)
-#define MEM16KB   (MEM1KB * 16)
-#define MEM64KB   (MEM1KB * 64)
-#define MEM256KB  (MEM1KB * 256)
-#define MEM512KB  (MEM1KB * 512)
-#define MEM128MB  (MEM1MB * 128)
+static pthread_mutex_t* s_screen_mutex;
+static pthread_mutex_t* s_kbd_mutex;
 
-#define DRAM_SIZE MEM128MB
-#define SCR_SIZE  MEM16KB
-#define KBD_SIZE  MEM4KB
-#define ROM_SIZE  MEM8KB
+// 映射到设备地址空间的内存
+static void* screen_base;
+static void* kbd_base;
 
-// Memory Map
-// 主存
-#define DRAM_BASE 0x80000000
-#define DRAM_END  (DRAM_BASE + DRAM_SIZE - 1)
+void dev_bus_init(DevBusParam param){
+    s_screen_mutex = param.screen_mutex;
+    s_kbd_mutex = param.kbd_mutex;
+    screen_base = param.screen_base;
+    kbd_base = param.kbd_base;
+}
 
-// 显示设备
-// 显示器地址空间为256KB
-#define SCR_BASE  0x00040000 // 256KB
-#define SCR_END  (SCR_BASE + SCR_SIZE - 1)
-
-// 键盘
-// 键盘地址空间为4KB
-#define KBD_BASE  0x00020000 //128KB
-#define KBD_END  (KBD_BASE + KBD_SIZE - 1)
-
-// ROM
-// 容量设置为 8KB
-#define ROM_BASE  0x00000000
-#define ROM_END  (KBD_BASE + ROM_SIZE - 1)
-
-#endif // __DEV_CONFIG_H__

@@ -361,51 +361,57 @@ static inline void jalr(uint8_t rd, uint8_t rs1, int32_t imm){
         x[rd] = (MXLEN_T)(pc + 4);
 }
 // load
+
+// 加载字节，符号扩展
 static inline void lb(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     uint8_t rd_data;
     MXLEN_T addr = addr_calc(r1,imm);
     int read_num = read_data(addr,1,CPU_BE,&rd_data);
-    assert(read_num == 1); // load指令必须有数据返回
+    assert(read_num == 0); // load指令必须有数据返回
     if (rd != 0)
         x[rd] = signed_ext(rd_data,7);
 
 }
+// 加载半字，符号扩展
 static inline void lh(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     uint16_t rd_data;
     MXLEN_T addr = addr_calc(r1,imm);
     int read_num = read_data(addr,2,CPU_BE,(uint8_t*)(&rd_data));
-    assert(read_num == 2); // load指令必须有数据返回
+    assert(read_num == 0); // load指令必须有数据返回
     if (rd != 0) {
         x[rd] = signed_ext(rd_data,15);
     }
 }
+// 加载字
 static inline void lw(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     int32_t rd_data;
     MXLEN_T addr = addr_calc(r1,imm);
     int read_num = read_data(addr,4,CPU_BE,(uint8_t*)(&rd_data));
-    assert(read_num == 4); // load指令必须有数据返回
+    assert(read_num == 0); // load指令必须有数据返回
     if (rd != 0) {
         x[rd] = rd_data;
     }
 }
+// 加载字节，无符号扩展
 static inline void lbu(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     uint8_t rd_data;
     MXLEN_T addr = addr_calc(r1,imm);
     int read_num = read_data(addr,1,CPU_BE,&rd_data);
-    assert(read_num == 1); // load指令必须有数据返回
+    assert(read_num == 0); // load指令必须有数据返回
     if (rd != 0)
         x[rd] = (MXLEN_T)(rd_data);
 }
+// 加载半字，无符号扩展
 static inline void lhu(uint8_t rd, uint8_t rs1, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     uint16_t rd_data;
     MXLEN_T addr = addr_calc(r1,imm);
     int read_num = read_data(addr,2,CPU_BE,(uint8_t*)(&rd_data));
-    assert(read_num == 2); // load指令必须有数据返回
+    assert(read_num == 0); // load指令必须有数据返回
     if (rd != 0) {
         x[rd] = (MXLEN_T)(rd_data);
     }
@@ -417,7 +423,7 @@ static inline void sb(uint8_t rs1, uint8_t rs2, int32_t imm){
     uint8_t wr_data = (uint8_t)r2;
     MXLEN_T addr = addr_calc(r1,imm);
     int write_num = write_data(addr,1,CPU_BE,&wr_data);
-    assert(write_num == 1); // write指令必须有数据返回
+    assert(write_num == 0); // write指令必须有数据返回
 }
 static inline void sh(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
@@ -425,14 +431,14 @@ static inline void sh(uint8_t rs1, uint8_t rs2, int32_t imm){
     uint8_t wr_data[2] = {(uint8_t)r2,(uint8_t)(r2 >> 8)};
     MXLEN_T addr = addr_calc(r1,imm);
     int write_num = write_data(addr,2,CPU_BE,wr_data);
-    assert(write_num == 2); // write指令必须有数据返回
+    assert(write_num == 0); // write指令必须有数据返回
 }
 static inline void sw(uint8_t rs1, uint8_t rs2, int32_t imm){
     MXLEN_T r1 = (MXLEN_T)(x[rs1]);
     MXLEN_T r2 = (MXLEN_T)(x[rs2]);
     MXLEN_T addr = addr_calc(r1,imm);
     int write_num = write_data(addr,4,CPU_BE,(uint8_t*)(&r2));
-    assert(write_num == 4); // write指令必须有数据返回
+    assert(write_num == 0); // write指令必须有数据返回
 }
 // load imme
 static inline void lui(uint8_t rd, int32_t imm){

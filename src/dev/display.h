@@ -25,8 +25,24 @@ SOFTWARE.
 #ifndef __DISPLAY_H__
     #define __DISPLAY_H__
 
+    #include <stdint.h>
+    #include <pthread.h>
+
+    typedef struct screen_init_param_t {
+        // 共享地址
+        pthread_mutex_t* screen_mem_mutex;  // 屏幕地址空间锁
+        pthread_mutex_t* kbd_mem_mutex;     // 键盘地址空间锁
+        void* screen_base;
+        void* kbd_base;
+        // 中断相关
+        pthread_mutex_t* screen_int_mutex;  // 屏幕中断锁
+        pthread_mutex_t* kbd_int_mutex;     // 键盘中断锁
+        uint8_t* screen_int_ptr;
+        uint8_t* kbd_int_ptr;
+    } ScreenInitParam;
+
     // 启动一个屏幕显示线程
-    void* screen_init(void* arg);
+    void* screen_init(void*);
 
     // 关闭屏幕并退出
     void screen_close();
