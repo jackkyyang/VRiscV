@@ -33,6 +33,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 
 #include "display.h"
 #include "../include/comm.h"
@@ -48,9 +49,6 @@ static GtkWidget *window;//定义window控件
 //创建文本框
 // TextView 指针
 static GtkWidget* view;
-
-// 创建Entry
-static GtkWidget* entry;
 
 // 垂直布局
 static GtkWidget* vbox;
@@ -103,25 +101,7 @@ static void display(const char* output_data,gint len)
 
 }
 
-static void enter_callback(GtkWidget *widget,gpointer data)
-{
 
-    const gchar* command;
-    guint16 command_len = 0;
-
-    command = gtk_entry_get_text(GTK_ENTRY(entry));
-
-    command_len = gtk_entry_get_text_length(GTK_ENTRY(entry));
-
-    display(command,(gint)command_len);
-
-    // 清空Entry内容
-    GtkEntryBuffer* buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
-    gtk_entry_buffer_delete_text(GTK_ENTRY_BUFFER(buf),0,-1);
-
-    return;
-
-}
 
 static int time_cnt = 0;
 static gboolean do_timer( gpointer* null)
@@ -135,6 +115,21 @@ static gboolean do_timer( gpointer* null)
     display(buf,(gint)len);
 
     return TRUE;//尽量返回TRUE
+}
+
+// 键盘press处理函数
+static guint key_press_val;
+gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
+{
+
+  //TODO,目前只绑定了部分ASCII码，后面需要对整个键盘做处理
+  key_press_val = event->keyval; // 获取键盘键值类型
+  if (key_press_val >= GDK_KEY_space && key_press_val <=GDK_KEY_ydiaeresis)
+  {
+    display((char*)(&key_press_val),1);
+  }
+
+  return TRUE;
 }
 
 void* screen_init(void* param)
@@ -186,12 +181,10 @@ void* screen_init(void* param)
     // gtk_scrolled_window_set_max_content_width (GTK_SCROLLED_WINDOW(scrowin_text),20);
 
 
-    entry= gtk_entry_new ();
     view = gtk_text_view_new();
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 
     gtk_container_add (GTK_CONTAINER(scrowin_text),view);
-    gtk_container_add (GTK_CONTAINER(scrowin_command),entry);
 
     gtk_box_pack_start(GTK_BOX(vbox), scrowin_text, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(vbox), scrowin_command, TRUE, FALSE, 5);
@@ -233,12 +226,6 @@ void* screen_init(void* param)
     // 并且将mark定位到Root之前
     display_end_mark = gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(textbuffer),"display_end", &display_end,FALSE);
 
-    //---------------------------------------------
-    // 命令行
-    //---------------------------------------------
-    gtk_entry_set_max_length(GTK_ENTRY(entry),0);
-    gtk_entry_set_placeholder_text (GTK_ENTRY(entry),"command:");
-
 
     //-------------------------------------------
     // 事件绑定
@@ -246,8 +233,8 @@ void* screen_init(void* param)
     // 在窗口被销毁时，退出 gtk_main 主循环
     g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
-    // 在输入Enter的时候，调用该函数
-    g_signal_connect (entry, "activate", G_CALLBACK (enter_callback), NULL);
+    // 绑定键盘事件
+    g_signal_connect(window, "key-press-event", G_CALLBACK(do_key_press), NULL);
 
     // 绑定定时器
     guint timer = g_timeout_add(1000, (GSourceFunc)do_timer, NULL);
