@@ -5,11 +5,14 @@
 #include <stdint.h>
 
 
-pthread_mutex_t *screen_int_mutex;  // 屏幕中断锁
-pthread_mutex_t *kbd_int_mutex;     // 键盘中断锁
+static pthread_mutex_t *screen_int_mutex;  // 屏幕中断锁
+static pthread_mutex_t *kbd_int_mutex;     // 键盘中断锁
 
-static uint8_t screen_int, effective_screen_int;
-static uint8_t kbd_int, effective_kbd_int;
+static uint8_t *screen_int_ptr;
+static uint8_t *kbd_int_ptr;
+
+static uint8_t effective_screen_int;
+static uint8_t effective_kbd_int;
 
 // TODO, 如何实现时钟中断和软件中断
 
@@ -19,8 +22,8 @@ void int_init(pthread_mutex_t* screen_int_mutex, pthread_mutex_t* kbd_int_mutex,
     screen_int_mutex = screen_int_mutex;
     kbd_int_mutex = kbd_int_mutex;
     //
-    screen_int_ptr = &screen_int;
-    kbd_int_ptr = &kbd_int;
+    screen_int_ptr = screen_int_ptr;
+    kbd_int_ptr = kbd_int_ptr;
 }
 
 uint64_t get_int_val()
@@ -36,12 +39,12 @@ uint64_t get_int_val()
     // 中断值更新
     if(!pthread_mutex_trylock(screen_int_mutex)){
         //获得屏幕中断使用权, 更新屏幕中断有效值
-        effective_screen_int = screen_int;
+        effective_screen_int = *screen_int_ptr;
         pthread_mutex_unlock(screen_int_mutex);
     }
     if(!pthread_mutex_trylock(kbd_int_mutex)){
         //获得屏幕中断使用权, 更新屏幕中断有效值
-        effective_kbd_int = kbd_int;
+        effective_kbd_int = *kbd_int_ptr;
         pthread_mutex_unlock(kbd_int_mutex);
     }
 

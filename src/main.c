@@ -182,8 +182,8 @@ static pthread_mutex_t screen_mem_mutex;  // 屏幕地址空间锁
 static pthread_mutex_t kbd_mem_mutex;     // 键盘地址空间锁
 static pthread_mutex_t screen_int_mutex;  // 屏幕中断锁
 static pthread_mutex_t kbd_int_mutex;     // 键盘中断锁
-static uint8_t* screen_int_ptr;
-static uint8_t* kbd_int_ptr;
+static uint8_t screen_int;
+static uint8_t kbd_int;
 // 注意，由于共享内存地址和中断指针值要在中断控制器初始化完成后才确定
 // 因此参数需要在main中确定
 static ScreenInitParam screen_param;
@@ -240,19 +240,20 @@ int main(int argc, char* argv[]){
     }
 
     // 注册中断
-    int_init(&screen_int_mutex,&kbd_int_mutex,screen_int_ptr,kbd_int_ptr);
+    int_init(&screen_int_mutex,&kbd_int_mutex,&screen_int,&kbd_int);
 
     //------------------------------------
     // 开启设备进程
     //------------------------------------
     // 准备参数
     screen_param.screen_int_mutex = &screen_int_mutex;
-    screen_param.kbd_int_mutex = &kbd_int_mutex;
-    screen_param.screen_int_ptr = screen_int_ptr;
-    screen_param.kbd_int_ptr = kbd_int_ptr;
+    screen_param.screen_int_ptr = &screen_int;
     screen_param.screen_mem_mutex = &screen_mem_mutex;
-    screen_param.kbd_mem_mutex = &kbd_mem_mutex;
     screen_param.screen_base = screen_mem_base;
+
+    screen_param.kbd_int_mutex = &kbd_int_mutex;
+    screen_param.kbd_int_ptr = &kbd_int;
+    screen_param.kbd_mem_mutex = &kbd_mem_mutex;
     screen_param.kbd_base = keyboard_mem_base;
 
     pthread_t tid;
