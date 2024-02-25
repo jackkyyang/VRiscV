@@ -34,8 +34,10 @@ SOFTWARE.
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
+#include <pthread.h>
 
 #include "display.h"
+#include "dev_config.h"
 #include "../include/comm.h"
 
 struct window_size_t
@@ -101,8 +103,6 @@ static void display(const char* output_data,gint len)
 
 }
 
-
-
 static int time_cnt = 0;
 static gboolean do_timer( gpointer* null)
 {
@@ -117,19 +117,82 @@ static gboolean do_timer( gpointer* null)
     return TRUE;//尽量返回TRUE
 }
 
-// 键盘press处理函数
+// 处理键盘事件
 static guint key_press_val;
+static uint32_t* kbd_queue; // 备份缓冲区地址
+static uint32_t  kbd_queue_num; // 备份缓冲区内有效数据的数量
+
+static inline void kbd_queue_push() {
+    kbd_queue[kbd_queue_num] = key_press_val;
+    kbd_queue_num +=1;
+}
+
 gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
 {
 
-  //TODO,目前只绑定了部分ASCII码，后面需要对整个键盘做处理
-  key_press_val = event->keyval; // 获取键盘键值类型
-  if (key_press_val >= GDK_KEY_space && key_press_val <=GDK_KEY_ydiaeresis)
-  {
-    display((char*)(&key_press_val),1);
-  }
+    key_press_val = event->keyval; // 获取键盘键值类型
+    int get_kbd_int_mutex = pthread_mutex_trylock(thread_param.kbd_int_mutex);
+    int get_kbd_mem_mutex = pthread_mutex_trylock(thread_param.kbd_mem_mutex);
 
-  return TRUE;
+    if(get_kbd_int_mutex || get_kbd_mem_mutex){
+        // 没拿到全部锁，使用备份缓冲区
+        kbd_queue_push();
+    } else{
+            // 得到硬件缓冲区读权限
+        KeyBoardBufferH* kbd_buf_h = (KeyBoardBufferH*)thread_param.kbd_base;
+        if (kbd_buf_h->kbd_buf_lock)
+        {
+            // 软件配置了缓冲区锁，禁止设备向缓冲区内写入内容
+            kbd_queue_push(); //使用备份缓冲区
+        }
+        else {
+            // 得到写权限
+            // 获得键盘缓冲区读写空间的起始地址
+            uint32_t* kbd_wr_base = thread_param.kbd_base + sizeof(KeyBoardBufferH) + kbd_buf_h->kbd_data_num;
+            // 先处理备份缓冲区内的数据
+            for (uint32_t i = 0; i < kbd_queue_num; i++)
+            {
+                kbd_wr_base[i] = kbd_queue[i];
+                kbd_buf_h->kbd_data_num +=1;
+            }
+            //清空备份缓冲区
+            kbd_queue_num = 0;
+            // 将新的输入内容更新到结尾
+            uint32_t* kbd_wr_end = thread_param.kbd_base + sizeof(KeyBoardBufferH) + kbd_buf_h->kbd_data_num;
+            *kbd_wr_end = key_press_val;
+
+            // 改变中断值
+            *(thread_param.kbd_int_ptr) = 1;
+        }
+    }
+
+    // 处理完成后，释放资源
+    if (!get_kbd_int_mutex)
+        pthread_mutex_unlock(thread_param.kbd_int_mutex);
+    if (!get_kbd_mem_mutex)
+        pthread_mutex_unlock(thread_param.kbd_mem_mutex);
+
+
+    return TRUE;
+}
+
+// 设备初始化
+static void dev_init(){
+    KeyBoardBufferH* kbd_buf_h = (KeyBoardBufferH*) thread_param.kbd_base;
+    FrameBufferH* screen_buf_h = (FrameBufferH*) thread_param.screen_base;
+
+    // 初始化设备头数据结构
+    kbd_buf_h->kbd_buf_lock = 0;
+    kbd_buf_h->kbd_data_num = 0;
+
+    screen_buf_h->frm_buf_lock = 0;
+    screen_buf_h->frm_data_num = 0;
+    screen_buf_h->screen_width = 0;
+    screen_buf_h->screen_height = 0;
+    screen_buf_h->frame_buf_max_len = (uint32_t)(SCR_SIZE - sizeof(FrameBufferH));
+
+    // 分配备份缓冲区
+    kbd_queue = malloc(KBD_SIZE);
 }
 
 void* screen_init(void* param)
@@ -140,6 +203,7 @@ void* screen_init(void* param)
     char* title = "Virtual Screen";
 
     thread_param = *((ScreenInitParam*)param);
+    dev_init();
 
     //GTK组件
     gtk_init(0,NULL);
@@ -247,5 +311,8 @@ void* screen_init(void* param)
 
     //删除定时器
     g_source_remove(timer);
+
+    // 释放备份缓冲区
+    free(kbd_queue);
 
 }
