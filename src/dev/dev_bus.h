@@ -74,4 +74,8 @@ int read_kbd(uint64_t addr, uint8_t byte_num, uint8_t* data_buf);
 // Return：0 成功，other：失败和错误码
 int write_kbd(uint64_t addr, uint8_t byte_num, uint8_t* data_buf);
 
+int read_int(uint64_t addr, uint8_t byte_num, uint8_t* data_buf);
+int write_int(uint64_t addr, uint8_t byte_num, uint8_t* data_buf);
+
+
 #endif // __DEV_BUS_H__

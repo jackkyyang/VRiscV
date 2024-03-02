@@ -31,6 +31,7 @@ SOFTWARE.
 #include "back_end.h"
 #include "sys_reg.h"
 #include "cpu_glb.h"
+#include "../dev/int_ctrl.h"
 
 
 // 定义通用寄存器
@@ -78,14 +79,30 @@ void instruction_execute(ExeParam *exe_param)
         exe_param->fetch_status->err_id = 0;
     }
 
+    e_st->icause = get_int_val();
 
-    decode(inst,e_st);
+    if (e_st->icause > 0) {
+        // 处理中断, 跳过指令译码和执行
+        // TODO, 没有考虑到中断屏蔽寄存器
+        e_st->interupt = 1;
+    }
+    else {
+        // 译码并执行指令
+        decode(inst,e_st);
+    }
+
+
+
 
 
     if (x[0] != 0) printf("Error! Cannot write value to X0!");
 
     // 按优先级选择异常
-    if (e_st->exception){
+    // 中断的优先级总是大于异常
+    if (e_st->interupt) {
+        trap2m(1,e_st->icause,curr_mode);
+    }
+    else if (e_st->exception){
         if (e_st->ecause.ifetch_breakpoint)
             trap2m(0,3,curr_mode);
         else if (e_st->ecause.instruction_page_fault)
@@ -119,13 +136,15 @@ void instruction_execute(ExeParam *exe_param)
             printf("Error Cannot find the exception cause!");
     }
 
-    if (e_st->exception || e_st->mret) {
+    if (e_st->interupt || e_st->exception || e_st->mret) {
         // next_pc是由异常处理函数计算出来的，已经更新到e_st中
         next_pc = e_st->next_pc;
+        e_st->interupt = 0;
         e_st->exception = 0;
         e_st->branch = 0;
         e_st->mret = 0;
         memset(&(e_st->ecause), 0, sizeof(ECause));
+        e_st->icause = 0;
     }
     else if (e_st->branch) { // 处理分支指令
         e_st->next_pc = next_pc;

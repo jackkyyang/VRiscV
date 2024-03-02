@@ -41,6 +41,7 @@ SOFTWARE.
 #define SCR_SIZE  MEM16KB
 #define KBD_SIZE  MEM4KB
 #define ROM_SIZE  MEM8KB
+#define INTCTRL_SIZE  MEM4KB
 
 // Memory Map
 // 主存
@@ -61,5 +62,10 @@ SOFTWARE.
 // 容量设置为 8KB
 #define ROM_BASE  0x00000000
 #define ROM_END  (KBD_BASE + ROM_SIZE - 1)
+
+// INTCTRL
+// 容量设置为 4KB
+#define INTCTRL_BASE  0x00010000 // 64K
+#define INTCTRL_END  (INTCTRL_BASE + INTCTRL_SIZE - 1)
 
 #endif // __DEV_CONFIG_H__

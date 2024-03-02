@@ -85,6 +85,8 @@ typedef struct execute_status
     uint8_t branch; // 用于分支跳转
     uint8_t exception; //用于处理异常
     ECause ecause;
+    uint8_t interupt; //用于处理中断
+    MXLEN_T icause; //中断号
     uint8_t mret; // 用于处理mret指令
     MXLEN_T inst; // 指令内容，异常时写入mtval
 
