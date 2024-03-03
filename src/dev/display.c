@@ -103,8 +103,18 @@ static void display(const char* output_data,gint len)
 
 }
 
+static uint32_t* kbd_queue; // 备份缓冲区地址
+static uint32_t  kbd_queue_num; // 备份缓冲区内有效数据的数量
+static char* frm_start_ptr; // 帧缓冲区第一个字符的地址
 
-static char* frm_start_ptr;
+// 软件处理中断流程
+// 1. 上锁
+// 2. 读取数据
+// 3. 处理数据
+// 4. 解锁
+// 5. 清理中断
+
+// 处理屏幕帧缓冲区
 static inline void flush_screen(const char* output_data,gint len){
     gtk_text_buffer_set_text(textbuffer,output_data, len);
 }
@@ -112,8 +122,8 @@ static inline void flush_screen(const char* output_data,gint len){
 static gboolean do_timer( gpointer* null)
 {
 
-    int get_kbd_mem_mutex = pthread_mutex_trylock(thread_param.screen_mem_mutex);
-    if (get_kbd_mem_mutex == 0) {
+    int get_scr_mem_mutex = pthread_mutex_trylock(thread_param.screen_mem_mutex);
+    if (get_scr_mem_mutex == 0) {
         // 得到缓冲区权限
         FrameBufferH* screen_buf_h = (FrameBufferH*) thread_param.screen_base;
         // 更新屏幕参数值
@@ -131,13 +141,34 @@ static gboolean do_timer( gpointer* null)
         // 软件配置了锁，或者帧缓冲区没发生改变
         pthread_mutex_unlock(thread_param.screen_mem_mutex);
     }
+
+    // 定时器另一个作用是查看键盘备份缓冲中是否存在未被处理的键盘事件
+    // 如果存在,且没有拉高中断和设备锁，则说明软件没有查看到该事件
+    // 此时需要帮助键盘拉高中断
+    if (kbd_queue_num > 0)
+    {
+        int get_kbd_int_mutex = pthread_mutex_trylock(thread_param.kbd_int_mutex);
+        int get_kbd_mem_mutex = pthread_mutex_trylock(thread_param.kbd_mem_mutex);
+        if(!get_kbd_int_mutex && !get_kbd_mem_mutex){
+            KeyBoardBufferH* kbd_buf_h = (KeyBoardBufferH*)thread_param.kbd_base;
+            if (*thread_param.kbd_int_ptr == 0 &&
+                kbd_buf_h->kbd_buf_lock == 0 )
+            {
+                *(thread_param.kbd_int_ptr) = 1;
+            }
+        }
+        // 处理完成后，释放资源
+        if (!get_kbd_int_mutex)
+            pthread_mutex_unlock(thread_param.kbd_int_mutex);
+        if (!get_kbd_mem_mutex)
+            pthread_mutex_unlock(thread_param.kbd_mem_mutex);
+    }
+
     return TRUE;
 }
 
 // 处理键盘事件
 static guint key_press_val;
-static uint32_t* kbd_queue; // 备份缓冲区地址
-static uint32_t  kbd_queue_num; // 备份缓冲区内有效数据的数量
 
 static inline void kbd_queue_push() {
     kbd_queue[kbd_queue_num] = key_press_val;
