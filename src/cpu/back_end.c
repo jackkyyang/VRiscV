@@ -61,6 +61,8 @@ static void clear_flags(){
 
 #include "decode.h"
 
+
+
 void instruction_execute(ExeParam *exe_param)
 {
     ExeStatus *e_st = get_exe_st_ptr();
@@ -79,7 +81,7 @@ void instruction_execute(ExeParam *exe_param)
         exe_param->fetch_status->err_id = 0;
     }
 
-    e_st->icause = get_int_val();
+    e_st->icause = int_mask_proc(get_int_val(),curr_mode);
 
     if (e_st->icause > 0) {
         // 处理中断, 跳过指令译码和执行

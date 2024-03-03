@@ -103,18 +103,35 @@ static void display(const char* output_data,gint len)
 
 }
 
-static int time_cnt = 0;
+
+static char* frm_start_ptr;
+static inline void flush_screen(const char* output_data,gint len){
+    gtk_text_buffer_set_text(textbuffer,output_data, len);
+}
+
 static gboolean do_timer( gpointer* null)
 {
-    gchar buf[64];
 
-    time_cnt +=1;
-
-    int len = sprintf(buf,"%d",time_cnt);
-
-    display(buf,(gint)len);
-
-    return TRUE;//尽量返回TRUE
+    int get_kbd_mem_mutex = pthread_mutex_trylock(thread_param.screen_mem_mutex);
+    if (get_kbd_mem_mutex == 0) {
+        // 得到缓冲区权限
+        FrameBufferH* screen_buf_h = (FrameBufferH*) thread_param.screen_base;
+        // 更新屏幕参数值
+        screen_buf_h->screen_width = (uint16_t)gtk_widget_get_allocated_width(view);
+        screen_buf_h->screen_height = (uint16_t) gtk_widget_get_allocated_height(view);
+        // 处理帧缓冲区
+        if (screen_buf_h->frm_buf_lock == 0 && screen_buf_h->frm_buf_change==1)
+        {
+            // 软件没有配置锁，且缓冲经过修改
+            flush_screen(frm_start_ptr,(gint)screen_buf_h->frm_data_num);
+            screen_buf_h->frm_buf_change = 0;
+            if (screen_buf_h->frm_data_num > SCR_SIZE)
+                display("Error! Frame Buffer overflows!\n",-1);
+        }
+        // 软件配置了锁，或者帧缓冲区没发生改变
+        pthread_mutex_unlock(thread_param.screen_mem_mutex);
+    }
+    return TRUE;
 }
 
 // 处理键盘事件
@@ -186,10 +203,12 @@ static void dev_init(){
     kbd_buf_h->kbd_data_num = 0;
 
     screen_buf_h->frm_buf_lock = 0;
+    screen_buf_h->frm_buf_change = 0;
     screen_buf_h->frm_data_num = 0;
     screen_buf_h->screen_width = 0;
     screen_buf_h->screen_height = 0;
     screen_buf_h->frame_buf_max_len = (uint32_t)(SCR_SIZE - sizeof(FrameBufferH));
+    frm_start_ptr = (char*)(((size_t)thread_param.screen_base) + sizeof(FrameBufferH));
 
     // 分配备份缓冲区
     kbd_queue = malloc(KBD_SIZE);
@@ -301,7 +320,7 @@ void* screen_init(void* param)
     g_signal_connect(window, "key-press-event", G_CALLBACK(do_key_press), NULL);
 
     // 绑定定时器
-    guint timer = g_timeout_add(1000, (GSourceFunc)do_timer, NULL);
+    guint timer = g_timeout_add(40, (GSourceFunc)do_timer, NULL);
 
     // 所有空间默认隐藏，设置显示窗口和其中所有控件
     gtk_widget_show_all(window);

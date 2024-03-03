@@ -54,5 +54,6 @@ SOFTWARE.
     void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode);
     void mret_proc();
     void raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst);
+    MXLEN_T int_mask_proc(MXLEN_T int_id,CPUMode curr_mode);
 
 #endif //__SYS_REG_H__

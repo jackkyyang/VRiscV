@@ -70,6 +70,7 @@ SOFTWARE.
     {
         // 软件配置值，如果lock为1，代表软件正在处理数据，不要让设备做内容搬运
         uint8_t  frm_buf_lock;
+        uint8_t  frm_buf_change; // 0, 没有改变，不需要搬运帧缓冲区
         uint32_t frm_data_num; // 0, 代表没有有效数据
         uint16_t screen_width;
         uint16_t screen_height;

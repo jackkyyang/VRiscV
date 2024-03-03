@@ -818,8 +818,37 @@ void trap2m(MXLEN_T interrupt,MXLEN_T e_code,CPUMode curr_mode){
 void raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst){
     trap2m(0,2,curr_mode);
     mtval = inst;
-};
+}
+MXLEN_T int_mask_proc(MXLEN_T int_id,CPUMode curr_mode)
+{
+    // 对应特权文档3.1.9章节中关于M模式中断的描述
+    // 中断trap到M模式需要满足以下全部条件
+    // 1. mstatus.MIE打开或者处于低特权模式
+    // 2. 中断对应的mie bit为1
+    // 3. mideleg对应bit为0
+    MXLEN_T int_mask = 1U << int_id;
 
+    if (int_id >= 16 || int_id == 3 || int_id == 7 || int_id == 11 ){
+        // M 模式中断
+        int m_trap_cond_1 = (mstatus.mie = 1 || curr_mode < M);
+        int m_trap_cond_2 = (STRUCT2INT(MXLEN_T,mie) & int_mask) > 0;
+        int m_trap_cond_3 = 1;
+        if ( m_trap_cond_1 && m_trap_cond_2 && m_trap_cond_3) {
+            //
+            //
+            return int_id;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else {
+        // 没有实现S模式，因此所有中断只能trap到M模式下
+        return 0;
+    }
+
+};
 
 // Mret 的处理
 void mret_proc(){
