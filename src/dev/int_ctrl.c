@@ -44,7 +44,7 @@ MXLEN_T get_int_val()
     // 18：键盘中断
 
     // 中断值更新
-    MIP int_pend;
+    MIP int_pend = {0};
 
     if(!pthread_mutex_trylock(s_screen_int_mutex)){
         //获得屏幕中断使用权, 更新屏幕中断有效值
