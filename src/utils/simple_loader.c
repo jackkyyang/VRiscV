@@ -155,7 +155,22 @@ uint64_t simple_loader(const char *file) {
         mapped_size +=proc_size;
       }
 
-      memset(mem_end_addr, 0, p->p_memsz - p->p_filesz);
+      uint64_t zero_len = (uint64_t)(p->p_memsz - p->p_filesz);
+      uint64_t cleared_size = 0;
+      uint64_t zero_start_va = p->p_vaddr + p->p_filesz;
+      uint64_t mem_zero_page_addr = 0;
+      uint64_t mem_zero_va_tag = 0;
+      uint64_t zero_start_pa =0;
+      uint64_t size_proc  =0;
+      while (cleared_size < zero_len){
+        mem_zero_va_tag = (uint64_t)ROUND(zero_start_va, ENTRY_SIZE);
+        mem_zero_page_addr = (uint64_t)mem_pool_lkup(mem_zero_va_tag);
+        zero_start_pa = mem_zero_page_addr + (uint64_t)MOD(zero_start_va, ENTRY_SIZE);
+        size_proc = (ENTRY_SIZE - (uint64_t)MOD(zero_start_va, ENTRY_SIZE));
+        memset((void*)zero_start_pa, 0, (size_t)size_proc);
+        cleared_size += size_proc;
+        zero_start_va += size_proc;
+      }
     }
   }
   munmap((void*)h,elf_map_size);
