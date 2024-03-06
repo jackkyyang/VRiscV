@@ -56,4 +56,31 @@ SOFTWARE.
     void raise_illegal_instruction(CPUMode curr_mode,MXLEN_T inst);
     MXLEN_T int_mask_proc(MXLEN_T int_id,CPUMode curr_mode);
 
+    // Machine Interrupt Registers
+    typedef struct mip_t
+    {
+    // 每bit为1的时候，表示mcause中对应中断号的中断正在pending
+        MXLEN_T res0   :1; // bit0
+        MXLEN_T ssip   :1; // bit1, supervisor-level software interrupts
+        MXLEN_T res2   :1; // bit2
+        // msip is written by accesses to memory-mapped control registers,
+        // which are used by remote harts to provide machine-level interprocessor interrupts
+        // 如果系统里只有一个核, msip 和 msie 都是read-only 0
+        MXLEN_T msip   :1; // bit3, Read-Only, Machine-level software interrupts
+        MXLEN_T res4   :1; // bit4
+        MXLEN_T stip   :1; // bit5, supervisor-level timer interrupts
+        MXLEN_T res6   :1; // bit6
+        MXLEN_T mtip   :1; // bit7, Read-Only, Machine timer interrupts
+        MXLEN_T res8   :1; // bit8
+        MXLEN_T seip   :1; // bit9, supervisor-level external interrupts
+        MXLEN_T res9   :1; // bit10
+        MXLEN_T meip   :1; // bit11, Read-Only, Machine-level external interrupts
+        MXLEN_T res12  :4; // bit15:12
+        MXLEN_T scr_int:1; // bit16
+        MXLEN_T res17  :1; // bit17
+        MXLEN_T kbd_int:1; // bit18
+        MXLEN_T usr    :13;// bit31:19
+    } MIP;
+    void set_mip(MIP);
+
 #endif //__SYS_REG_H__

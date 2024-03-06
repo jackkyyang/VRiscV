@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "int_ctrl.h"
+#include "../cpu/sys_reg.h"
 
 static pthread_mutex_t* s_screen_int_mutex;  // 屏幕中断锁
 static pthread_mutex_t* s_kbd_int_mutex;     // 键盘中断锁
@@ -43,16 +44,22 @@ MXLEN_T get_int_val()
     // 18：键盘中断
 
     // 中断值更新
+    MIP int_pend;
+
     if(!pthread_mutex_trylock(s_screen_int_mutex)){
         //获得屏幕中断使用权, 更新屏幕中断有效值
         effective_screen_int = *s_screen_int_ptr;
+        int_pend.scr_int = effective_screen_int;
         pthread_mutex_unlock(s_screen_int_mutex);
     }
     if(!pthread_mutex_trylock(s_kbd_int_mutex)){
         //获得屏幕中断使用权, 更新屏幕中断有效值
         effective_kbd_int = *s_kbd_int_ptr;
+        int_pend.kbd_int = effective_kbd_int;
         pthread_mutex_unlock(s_kbd_int_mutex);
     }
+
+    set_mip(int_pend);
 
     // 中断仲裁
     if (effective_screen_int)

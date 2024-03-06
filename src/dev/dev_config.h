@@ -60,7 +60,7 @@ SOFTWARE.
 
 // ROM
 // 容量设置为 8KB
-#define ROM_BASE  0x00000000
+#define ROM_BASE  0x00001000
 #define ROM_END  (KBD_BASE + ROM_SIZE - 1)
 
 // INTCTRL

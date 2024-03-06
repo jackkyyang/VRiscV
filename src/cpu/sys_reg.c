@@ -159,28 +159,8 @@ static MXLEN_T medeleg;
 static MXLEN_T mideleg;
 #endif
 
-// Machine Interrupt Registers
-static struct mip_t
-{
-// 每bit为1的时候，表示mcause中对应中断号的中断正在pending
-    MXLEN_T res0   :1; // bit0
-    MXLEN_T ssip   :1; // bit1, supervisor-level software interrupts
-    MXLEN_T res2   :1; // bit2
-    // msip is written by accesses to memory-mapped control registers,
-    // which are used by remote harts to provide machine-level interprocessor interrupts
-    // 如果系统里只有一个核, msip 和 msie 都是read-only 0
-    MXLEN_T msip   :1; // bit3, Read-Only, Machine-level software interrupts
-    MXLEN_T res4   :1; // bit4
-    MXLEN_T stip   :1; // bit5, supervisor-level timer interrupts
-    MXLEN_T res6   :1; // bit6
-    MXLEN_T mtip   :1; // bit7, Read-Only, Machine timer interrupts
-    MXLEN_T res8   :1; // bit8
-    MXLEN_T seip   :1; // bit9, supervisor-level external interrupts
-    MXLEN_T res9   :1; // bit10
-    MXLEN_T meip   :1; // bit11, Read-Only, Machine-level external interrupts
-    MXLEN_T res12  :4; // bit15:12
-    MXLEN_T usr    :16;// bit31:16
-} mip;
+static MIP mip;
+
 static struct mie_t
 {
 // 每bit为1的时候，表示mcause中对应中断号的中断使能
@@ -748,7 +728,7 @@ int csr_write(uint32_t csr, MXLEN_T wdata)
         mtval = wdata;
         break;
     case 0x344:
-        mip =INT2STRUCT(struct mip_t,wdata);
+        // mip =INT2STRUCT(struct mip_t,wdata); // MIP 作为RO寄存器，只能让硬件来清0
         break;
 
     // Machine Configuration
@@ -772,6 +752,9 @@ int csr_write(uint32_t csr, MXLEN_T wdata)
     return 0;
 }
 
+void set_mip(MIP x){
+    mip = x;
+}
 //---------------------------------------------
 // Trap 进M状态时的系统寄存器处理
 // 硬件自动处理的部分
@@ -824,7 +807,7 @@ MXLEN_T int_mask_proc(MXLEN_T int_id,CPUMode curr_mode)
     // 对应特权文档3.1.9章节中关于M模式中断的描述
     // 中断trap到M模式需要满足以下全部条件
     // 1. mstatus.MIE打开或者处于低特权模式
-    // 2. 中断对应的mie bit为1
+    // 2. 中断对应的mie和mip bit为1
     // 3. mideleg对应bit为0
     MXLEN_T int_mask = 1U << int_id;
 
@@ -832,7 +815,8 @@ MXLEN_T int_mask_proc(MXLEN_T int_id,CPUMode curr_mode)
         // M 模式中断
         int m_trap_cond_1 = (mstatus.mie = 1 || curr_mode < M);
         int m_trap_cond_2 = (STRUCT2INT(MXLEN_T,mie) & int_mask) > 0;
-        int m_trap_cond_3 = 1;
+        int m_trap_cond_3 = (STRUCT2INT(MXLEN_T,mip) & int_mask) > 0;
+        //  mideleg 在目前的实现中固定为0
         if ( m_trap_cond_1 && m_trap_cond_2 && m_trap_cond_3) {
             //
             //
