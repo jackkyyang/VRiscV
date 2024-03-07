@@ -28,6 +28,7 @@ SOFTWARE.
 
 #include "dev_bus.h"
 #include "int_ctrl.h"
+#include "dev_config.h"
 
 static pthread_mutex_t* s_screen_mutex;
 static pthread_mutex_t* s_kbd_mutex;
@@ -53,7 +54,7 @@ static inline int read_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf,
 
     for (uint8_t i = 0; i < byte_num; i++)
     {
-        data_buf[i] = ((uint8_t*)dev_base)[offset];
+        data_buf[i] = ((uint8_t*)dev_base)[offset+i];
     }
 
     pthread_mutex_unlock(dev_mutex);
@@ -79,35 +80,36 @@ static inline int write_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf
 
 int read_screen(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return read_dev(addr,byte_num,data_buf,s_screen_mutex,screen_base);
+    return read_dev((addr - SCR_BASE),byte_num,data_buf,s_screen_mutex,screen_base);
 }
 
 int write_screen(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return write_dev(addr,byte_num,data_buf,s_screen_mutex,screen_base);
+    return write_dev((addr - SCR_BASE),byte_num,data_buf,s_screen_mutex,screen_base);
 }
 
 int read_kbd(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return read_dev(addr,byte_num,data_buf,s_kbd_mutex,kbd_base);
+    return read_dev((addr - KBD_BASE),byte_num,data_buf,s_kbd_mutex,kbd_base);
 }
 
 int write_kbd(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return write_dev(addr,byte_num,data_buf,s_kbd_mutex,kbd_base);
+    return write_dev((addr - KBD_BASE),byte_num,data_buf,s_kbd_mutex,kbd_base);
 }
 
 // 实现简单的中断控制器的读操作
 //
 int read_int(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
+    uint64_t offset = addr - INTCTRL_BASE;
     if (byte_num != 4)
     {
         printf("Error! Must read 4 byte from int_ctrl!");
         return 1;
     }
 
-    if (addr == 0)
+    if (offset == 0)
     {
         *((MXLEN_T*)data_buf) = get_int_id();
         return  0;
@@ -120,13 +122,15 @@ int read_int(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 
 int write_int(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
+    uint64_t offset = addr - INTCTRL_BASE;
+
     if (byte_num != 4)
     {
         printf("Error! Must write 4 byte from int_ctrl!");
         return 1;
     }
 
-    if (addr == 4)
+    if (offset == 4)
     {
         MXLEN_T int_id = *((MXLEN_T*)data_buf);
         int_clr(int_id);

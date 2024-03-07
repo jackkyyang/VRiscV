@@ -35,6 +35,7 @@ SOFTWARE.
 #include "dev/display.h"
 #include "dev/dev_config.h"
 #include "dev/int_ctrl.h"
+#include "dev/dev_bus.h"
 #include "utils/simple_loader.h"
 #include "utils/str_tools.h"
 #include "include/comm.h"
@@ -187,6 +188,7 @@ static uint8_t kbd_int;
 // 注意，由于共享内存地址和中断指针值要在中断控制器初始化完成后才确定
 // 因此参数需要在main中确定
 static ScreenInitParam screen_param;
+static DevBusParam dev_bus_param;
 
 int main(int argc, char* argv[]){
 
@@ -242,6 +244,12 @@ int main(int argc, char* argv[]){
     // 注册中断
     int_init(&screen_int_mutex,&kbd_int_mutex,&screen_int,&kbd_int);
 
+    // 初始化总线
+    dev_bus_param.kbd_base = keyboard_mem_base;
+    dev_bus_param.kbd_mutex = &kbd_mem_mutex;
+    dev_bus_param.screen_base = screen_mem_base;
+    dev_bus_param.screen_mutex = &screen_mem_mutex;
+    dev_bus_init(dev_bus_param);
     //------------------------------------
     // 开启设备进程
     //------------------------------------

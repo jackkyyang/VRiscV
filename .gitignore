@@ -57,3 +57,4 @@ tests/bin
 tests/asm
 tests/riscv-tests
 *.log
+*.swp

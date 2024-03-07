@@ -126,10 +126,10 @@ static MCheck addr_check(uint64_t addr, uint8_t byte_num, MemOpSrc op_src){
         if ((addr + byte_num) > SCR_END) {
             addr_check.fault = 1;
         }
-        if (misalign_access_check(addr,byte_num))
-        {
-            addr_check.fault = 1;
-        }
+        // if (misalign_access_check(addr,byte_num))
+        // {
+        //     addr_check.fault = 1;
+        // }
     }
     else if (addr >= INTCTRL_BASE && addr <= INTCTRL_END)
     {
