@@ -42,7 +42,7 @@ SOFTWARE.
 
 
 #define RESET_ADDR 0x80000000
-#define TIMEOUT 100000
+#define TIMEOUT 1000000000
 
 void print_localtime(){
     time_t now = time(NULL);

@@ -813,7 +813,7 @@ MXLEN_T int_mask_proc(MXLEN_T int_id,CPUMode curr_mode)
 
     if (int_id >= 16 || int_id == 3 || int_id == 7 || int_id == 11 ){
         // M 模式中断
-        int m_trap_cond_1 = (mstatus.mie = 1 || curr_mode < M);
+        int m_trap_cond_1 = (mstatus.mie == 1 || curr_mode < M);
         int m_trap_cond_2 = (STRUCT2INT(MXLEN_T,mie) & int_mask) > 0;
         int m_trap_cond_3 = (STRUCT2INT(MXLEN_T,mip) & int_mask) > 0;
         //  mideleg 在目前的实现中固定为0
