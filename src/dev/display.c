@@ -208,7 +208,7 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
             // 将新的输入内容更新到结尾
             uint32_t* kbd_wr_end = thread_param.kbd_base + sizeof(KeyBoardBufferH) + kbd_buf_h->kbd_data_num;
             *kbd_wr_end = key_press_val;
-
+            kbd_buf_h->kbd_data_num +=1;
             // 改变中断值
             *(thread_param.kbd_int_ptr) = 1;
         }

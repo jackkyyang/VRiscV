@@ -54,7 +54,7 @@ static inline int read_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf,
 
     for (uint8_t i = 0; i < byte_num; i++)
     {
-        data_buf[i] = ((uint8_t*)dev_base)[offset+i];
+        data_buf[i] = *(((uint8_t*)dev_base) +offset+i);
     }
 
     pthread_mutex_unlock(dev_mutex);
@@ -62,7 +62,7 @@ static inline int read_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf,
 }
 
 static inline int write_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf, pthread_mutex_t* dev_mutex, void* dev_base) {
-    uint8_t* wr_ptr = (uint8_t*)dev_base;
+    uint8_t* wr_ptr = (uint8_t*)dev_base + offset;
 
     // acquire the lock of device memory
     if (pthread_mutex_lock(dev_mutex) != 0){
