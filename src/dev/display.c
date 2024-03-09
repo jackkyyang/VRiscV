@@ -35,6 +35,7 @@ SOFTWARE.
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "display.h"
 #include "dev_config.h"
@@ -155,25 +156,26 @@ static gboolean do_timer( gpointer* null)
         if(!get_kbd_int_mutex && !get_kbd_mem_mutex){
             KeyBoardBufferH* kbd_buf_h = (KeyBoardBufferH*)thread_param.kbd_base;
             if (*thread_param.kbd_int_ptr == 0 &&
-                kbd_buf_h->kbd_buf_lock == 0 )
-            {
+                kbd_buf_h->kbd_buf_lock == 0 ) {
+
+                // 软件没有处理，同时硬件也没有拉高中断
                 kbd_buf_start = thread_param.kbd_base + sizeof(KeyBoardBufferH);
                 kbd_wr_ptr  = (uint32_t*)(kbd_buf_start + sizeof(uint32_t) * kbd_buf_h->kbd_data_num);
                 // 先处理备份缓冲区内的数据
                 for (uint32_t i = 0; i < kbd_queue_num; i++)
                 {
                     kbd_wr_ptr[i] = kbd_queue[i];
-                    kbd_buf_h->kbd_data_num +=1;
                 }
+                kbd_buf_h->kbd_data_num += kbd_queue_num;
                 kbd_queue_num = 0;
                 *(thread_param.kbd_int_ptr) = 1;
             }
         }
         // 处理完成后，释放资源
-        if (!get_kbd_int_mutex)
-            pthread_mutex_unlock(thread_param.kbd_int_mutex);
         if (!get_kbd_mem_mutex)
             pthread_mutex_unlock(thread_param.kbd_mem_mutex);
+        if (!get_kbd_int_mutex)
+            pthread_mutex_unlock(thread_param.kbd_int_mutex);
     }
 
     return TRUE;
@@ -193,6 +195,7 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
     key_press_val = event->keyval; // 获取键盘键值类型
     int get_kbd_int_mutex = pthread_mutex_trylock(thread_param.kbd_int_mutex);
     int get_kbd_mem_mutex = pthread_mutex_trylock(thread_param.kbd_mem_mutex);
+    assert(key_press_val != 0);
 
     if(get_kbd_int_mutex || get_kbd_mem_mutex){
         // 没拿到全部锁，使用备份缓冲区
@@ -214,12 +217,13 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
             for (uint32_t i = 0; i < kbd_queue_num; i++)
             {
                 kbd_wr_base[i] = kbd_queue[i];
-                kbd_buf_h->kbd_data_num +=1;
+                assert(kbd_wr_base[i] != 0);
             }
             //清空备份缓冲区
+            kbd_buf_h->kbd_data_num += kbd_queue_num;
             kbd_queue_num = 0;
             // 将新的输入内容更新到结尾
-            uint32_t* kbd_wr_end =  (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num*kbd_buf_h->kbd_data_num*sizeof(uint32_t));
+            uint32_t* kbd_wr_end =  (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num*sizeof(uint32_t));
             *kbd_wr_end = key_press_val;
             kbd_buf_h->kbd_data_num +=1;
             // 改变中断值
@@ -228,10 +232,10 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
     }
 
     // 处理完成后，释放资源
-    if (!get_kbd_int_mutex)
-        pthread_mutex_unlock(thread_param.kbd_int_mutex);
     if (!get_kbd_mem_mutex)
         pthread_mutex_unlock(thread_param.kbd_mem_mutex);
+    if (!get_kbd_int_mutex)
+        pthread_mutex_unlock(thread_param.kbd_int_mutex);
 
 
     return TRUE;
