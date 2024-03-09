@@ -44,11 +44,11 @@ void dev_bus_init(DevBusParam param){
     kbd_base = param.kbd_base;
 }
 
-static inline int read_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf, pthread_mutex_t* dev_mutex, void* dev_base) {
+static inline int read_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf, pthread_mutex_t* dev_mutex, void* dev_base, uint8_t src_id) {
 
     // acquire the lock of device memory
     if (pthread_mutex_lock(dev_mutex) != 0){
-        printf("Meet MUTEX lock error during reading devices!");
+        printf("Meet MUTEX lock error during reading devices [%u]!\n",src_id);
         return 1;
     }
 
@@ -61,12 +61,12 @@ static inline int read_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf,
     return 0;
 }
 
-static inline int write_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf, pthread_mutex_t* dev_mutex, void* dev_base) {
+static inline int write_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf, pthread_mutex_t* dev_mutex, void* dev_base, uint8_t src_id) {
     uint8_t* wr_ptr = (uint8_t*)dev_base + offset;
 
     // acquire the lock of device memory
     if (pthread_mutex_lock(dev_mutex) != 0){
-        printf("Meet MUTEX lock error during writing devices!");
+        printf("Meet MUTEX lock error during writing devices [%u]!\n",src_id);
         return 2;
     }
 
@@ -80,22 +80,22 @@ static inline int write_dev(uint64_t offset, uint8_t byte_num, uint8_t *data_buf
 
 int read_screen(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return read_dev((addr - SCR_BASE),byte_num,data_buf,s_screen_mutex,screen_base);
+    return read_dev((addr - SCR_BASE),byte_num,data_buf,s_screen_mutex,screen_base,0);
 }
 
 int write_screen(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return write_dev((addr - SCR_BASE),byte_num,data_buf,s_screen_mutex,screen_base);
+    return write_dev((addr - SCR_BASE),byte_num,data_buf,s_screen_mutex,screen_base,0);
 }
 
 int read_kbd(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return read_dev((addr - KBD_BASE),byte_num,data_buf,s_kbd_mutex,kbd_base);
+    return read_dev((addr - KBD_BASE),byte_num,data_buf,s_kbd_mutex,kbd_base,1);
 }
 
 int write_kbd(uint64_t addr, uint8_t byte_num, uint8_t *data_buf)
 {
-    return write_dev((addr - KBD_BASE),byte_num,data_buf,s_kbd_mutex,kbd_base);
+    return write_dev((addr - KBD_BASE),byte_num,data_buf,s_kbd_mutex,kbd_base,1);
 }
 
 // 实现简单的中断控制器的读操作

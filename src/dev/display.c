@@ -209,7 +209,7 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
             // 得到写权限
             // 获得键盘缓冲区读写空间的起始地址
             uint8_t* kbd_buf_start = thread_param.kbd_base + sizeof(KeyBoardBufferH);
-            uint32_t* kbd_wr_base = (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num);
+            uint32_t* kbd_wr_base = (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num*sizeof(uint32_t));
             // 先处理备份缓冲区内的数据
             for (uint32_t i = 0; i < kbd_queue_num; i++)
             {
@@ -219,7 +219,7 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
             //清空备份缓冲区
             kbd_queue_num = 0;
             // 将新的输入内容更新到结尾
-            uint32_t* kbd_wr_end =  (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num);
+            uint32_t* kbd_wr_end =  (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num*kbd_buf_h->kbd_data_num*sizeof(uint32_t));
             *kbd_wr_end = key_press_val;
             kbd_buf_h->kbd_data_num +=1;
             // 改变中断值
