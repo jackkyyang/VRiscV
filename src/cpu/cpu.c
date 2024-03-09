@@ -78,7 +78,7 @@ void* cpu_run(void* param){
     while (1)
     {
         // TimeOut 保护
-        if(iid == cpu_params.TIME_OUT){
+        if(e_st->self_test && iid == cpu_params.TIME_OUT){
             *(cpu_params.end_time) = clock();
             printf("**********" L_RED "TIMEOUT" NONE "**********\n");
             printf("TIMEOUT Instruction Number: %lu\n",iid);

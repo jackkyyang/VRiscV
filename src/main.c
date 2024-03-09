@@ -43,7 +43,7 @@ SOFTWARE.
 
 
 #define RESET_ADDR 0x80000000
-#define TIMEOUT 1000000000
+#define TIMEOUT 100000
 
 void print_localtime(){
     time_t now = time(NULL);
@@ -112,7 +112,7 @@ int arguments_parse(int argc, char* argv[]){
         {
           case 'h': // Help
             printf("Usage: VRiscV OPTIONS...\n");
-            printf("    -t              TIMEOUT         integer, timeout number of instruction for the Virtual Machine\n");
+            printf("    -t              TIMEOUT         integer, timeout number of instruction for self-test mode\n");
             printf("    -s              filepath        enable self-test mode and set the filepath of the test executable file\n");
             printf("    --bootloader    filepath        filepath of the bootloader program\n");
             printf("    --resetpc       RESET_ADDR      integer, set the entry point of the Reset Vector\n");
