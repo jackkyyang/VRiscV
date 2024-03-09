@@ -117,6 +117,7 @@ static char* frm_start_ptr; // 帧缓冲区第一个字符的地址
 // 处理屏幕帧缓冲区
 static inline void flush_screen(const char* output_data,gint len){
     gtk_text_buffer_set_text(textbuffer,output_data, len);
+    auto_scroll();
 }
 
 static gboolean do_timer( gpointer* null)
@@ -144,7 +145,9 @@ static gboolean do_timer( gpointer* null)
 
     // 定时器另一个作用是查看键盘备份缓冲中是否存在未被处理的键盘事件
     // 如果存在,且没有拉高中断和设备锁，则说明软件没有查看到该事件
-    // 此时需要帮助键盘拉高中断
+    // 此时需要帮助键盘拉高中断, 将备份区内容移动到缓冲区中
+    uint8_t* kbd_buf_start;
+    uint32_t* kbd_wr_base;
     if (kbd_queue_num > 0)
     {
         int get_kbd_int_mutex = pthread_mutex_trylock(thread_param.kbd_int_mutex);
@@ -154,6 +157,15 @@ static gboolean do_timer( gpointer* null)
             if (*thread_param.kbd_int_ptr == 0 &&
                 kbd_buf_h->kbd_buf_lock == 0 )
             {
+                kbd_buf_start = thread_param.kbd_base + sizeof(KeyBoardBufferH);
+                kbd_wr_base  = (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num);
+                // 先处理备份缓冲区内的数据
+                for (uint32_t i = 0; i < kbd_queue_num; i++)
+                {
+                    kbd_wr_base[i] = kbd_queue[i];
+                    kbd_buf_h->kbd_data_num +=1;
+                }
+                kbd_queue_num = 0;
                 *(thread_param.kbd_int_ptr) = 1;
             }
         }
@@ -196,7 +208,8 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
         else {
             // 得到写权限
             // 获得键盘缓冲区读写空间的起始地址
-            uint32_t* kbd_wr_base = thread_param.kbd_base + sizeof(KeyBoardBufferH) + kbd_buf_h->kbd_data_num;
+            uint8_t* kbd_buf_start = thread_param.kbd_base + sizeof(KeyBoardBufferH);
+            uint32_t* kbd_wr_base = (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num);
             // 先处理备份缓冲区内的数据
             for (uint32_t i = 0; i < kbd_queue_num; i++)
             {
@@ -206,7 +219,7 @@ gboolean do_key_press(GtkWidget *widget, GdkEventKey  *event, gpointer data)
             //清空备份缓冲区
             kbd_queue_num = 0;
             // 将新的输入内容更新到结尾
-            uint32_t* kbd_wr_end = thread_param.kbd_base + sizeof(KeyBoardBufferH) + kbd_buf_h->kbd_data_num;
+            uint32_t* kbd_wr_end =  (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num);
             *kbd_wr_end = key_press_val;
             kbd_buf_h->kbd_data_num +=1;
             // 改变中断值
