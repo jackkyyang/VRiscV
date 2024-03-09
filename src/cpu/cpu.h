@@ -27,8 +27,21 @@ SOFTWARE.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
-uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* tpc_fd);
+typedef struct cpu_param_t
+{
+    uint64_t TIME_OUT;
+    uint64_t entry_addr;
+    uint8_t self_test;
+    FILE* tpc_fd;
+    uint8_t* cpu_exit;
+    clock_t* start_time;
+    clock_t* end_time;
+}CPUParam;
+
+
+void* cpu_run(void*);
 
 uint64_t get_iid();
 #endif //__CPU_H__

@@ -69,18 +69,31 @@ static void cpu_init(uint64_t entry_addr,uint8_t self_test)
     e_st->self_test = self_test;
 }
 
-uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* tpc_fd){
-    cpu_init(entry_addr,self_test);
+static CPUParam cpu_params;
+void* cpu_run(void* param){
+    cpu_params = *((CPUParam*)param);
+    cpu_init(cpu_params.entry_addr,cpu_params.self_test);
     ExeStatus *e_st = read_exe_st();
+    *(cpu_params.start_time) = clock();
     while (1)
     {
         // TimeOut 保护
-        if(iid == TIME_OUT){
+        if(iid == cpu_params.TIME_OUT){
+            *(cpu_params.end_time) = clock();
             printf("**********" L_RED "TIMEOUT" NONE "**********\n");
             printf("TIMEOUT Instruction Number: %lu\n",iid);
             printf("current PC: %lx\n",(uint64_t)(e_st->curr_pc));
             break;
         }
+
+        volatile uint8_t stop_value = *(cpu_params.cpu_exit);
+        if (stop_value)
+        {
+            *(cpu_params.end_time) = clock();
+            printf("CPU exit!\n");
+            break;
+        }
+
 
         set_cpu_mode(e_st->next_mode);
         // Front End process
@@ -91,6 +104,7 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* t
         instruction_execute(&exe_param);
 
         if (e_st->exit != 0){
+            *(cpu_params.end_time) = clock();
             printf("Virtual Machine Exit!\n");
             iid +=1;
             if (e_st->self_test)
@@ -111,13 +125,12 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* t
                 printf("*******************************\n");
                 fclose(st_fd);
             }
-
             break;
         }
 
-        if (tpc_fd != NULL) // 表明有打开的trace log文件，使能了trace pc的功能
+        if (cpu_params.tpc_fd != NULL) // 表明有打开的trace log文件，使能了trace pc的功能
         {
-            if (fprintf(tpc_fd,"0x%x\n",(MXLEN_T)pc) < 0)
+            if (fprintf(cpu_params.tpc_fd,"0x%x\n",(MXLEN_T)pc) < 0)
             {
                 printf("Warning! found error during writing log file of Trace PC");
             }
@@ -128,7 +141,6 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* t
         iid +=1;
         pc = e_st->next_pc;
     }
-    return iid;
 }
 
 uint64_t get_iid()

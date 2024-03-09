@@ -39,6 +39,7 @@ SOFTWARE.
         pthread_mutex_t* kbd_int_mutex;     // 键盘中断锁
         uint8_t* screen_int_ptr;
         uint8_t* kbd_int_ptr;
+        uint8_t* dev_exit;
     } ScreenInitParam;
 
     // 启动一个屏幕显示线程

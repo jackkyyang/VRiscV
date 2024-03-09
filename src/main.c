@@ -69,6 +69,10 @@ static FILE* tpc_fd = NULL;
 
 static uint8_t non_func = 0;
 
+// 线程控制
+static uint8_t cpu_exit;
+static uint8_t dev_exit;
+
 int arguments_parse(int argc, char* argv[]){
 
     int index;
@@ -197,8 +201,14 @@ static DevBusParam dev_bus_param;
 
 static clock_t begin, end;
 
-// 屏幕tid
+static CPUParam cpu_params;
+
+// 子线程TID
+static pthread_t cpu_tid;
 static pthread_t display_tid;
+
+static int cpu_started = 0;
+static int dev_started = 0;
 
 static void prinf_runtime_info(){
     double time_cost = (double)(end-begin)/CLOCKS_PER_SEC;
@@ -222,26 +232,27 @@ static void resource_free(){
         free((void*)tracepc_logfile);
         fclose(tpc_fd);
     }
-    // 等待线程结束
+    // 在子线程结束后回收共享的内存
     if (self_test == 0)
     {
-        char* retval = NULL;
-        pthread_join(display_tid,(void**)&retval);
-        // 在子线程结束后回收共享的内存
         free(screen_mem_base);
         free(keyboard_mem_base);
         // 销毁所有互斥锁
         pthread_mutex_destroy(&screen_mem_mutex);
         pthread_mutex_destroy(&kbd_mem_mutex);
     }
+    // 回收中断锁
     pthread_mutex_destroy(&screen_int_mutex);
     pthread_mutex_destroy(&kbd_int_mutex);
 
 }
 
 void exit_handler(){
+    // 因为是signal是异步的,无法精确获得cpu线程的结束时间
     end = clock();
     printf("\nGet SIGINT, Exit Virtual Machine!\n");
+    cpu_exit = 1;
+    dev_exit = 1;
     prinf_runtime_info();
     resource_free();
     exit(0);
@@ -266,6 +277,7 @@ int main(int argc, char* argv[]){
     }
 
 
+    print_localtime();
     // 自测时也要初始化中断控制器，因此需要初始化中断锁
     pthread_mutex_init(&screen_int_mutex,NULL);
     pthread_mutex_init(&kbd_int_mutex,NULL);
@@ -319,6 +331,7 @@ int main(int argc, char* argv[]){
         screen_param.kbd_int_ptr = &kbd_int;
         screen_param.kbd_mem_mutex = &kbd_mem_mutex;
         screen_param.kbd_base = keyboard_mem_base;
+        screen_param.dev_exit = &dev_exit;
 
         int t_creat_result = pthread_create(&display_tid,NULL,screen_init,&screen_param);
         if (t_creat_result)
@@ -327,6 +340,7 @@ int main(int argc, char* argv[]){
             printf("Found Error during pthread_creat, code is [%d]\n",t_creat_result);
             return 0;
         }
+        dev_started =1 ;
         printf("Start Display thread, TID is [%lX]\n",display_tid);
     }
 
@@ -367,16 +381,31 @@ int main(int argc, char* argv[]){
         init_err_flag = 2;
     }
 
+    // ----------------------------
+    // 进入CPU
+    // ----------------------------
     if (init_err_flag == 0)
     {
         // 没有初始化错误
-        print_localtime();
         signal(SIGINT, exit_handler); // 注册中断函数，用户可自行停止虚拟机进程
-        begin = clock();
-        cpu_run(timeout_num,entry_addr,self_test,tpc_fd);
-        end = clock();
+        // 参数准备
+        cpu_params.TIME_OUT = timeout_num;
+        cpu_params.entry_addr = entry_addr;
+        cpu_params.self_test = self_test;
+        cpu_params.tpc_fd = tpc_fd;
+        cpu_params.cpu_exit = &cpu_exit;
+        cpu_params.start_time = &begin;
+        cpu_params.end_time = &end;
+        // 启动CPU线程
+        int cpu_res = pthread_create(&cpu_tid,NULL,cpu_run,&cpu_params);
+        if (cpu_res)
+        {
+            //线程创建错误
+            printf("Found Error during creat CPU thread, code is [%d]\n",cpu_res);
+        }
+        cpu_started = 1;
+        printf("Start CPU thread, TID is [%lX]\n",cpu_tid);
         // 虚拟机自行退出
-        prinf_runtime_info();
     }
     else {
         printf("--------------------------------\n");
@@ -387,7 +416,23 @@ int main(int argc, char* argv[]){
     //---------------------------------
     // 资源回收
     //---------------------------------
+    // 等待线程结束
+    char* retval = NULL;
+
+    if (dev_started == 1) {
+        pthread_join(display_tid,(void**)&retval);
+
+        // 如果屏幕线程关闭, 立刻关闭CPU线程
+        if (cpu_started == 1) {
+            cpu_exit = 1;
+        }
+    }
+
+    if (cpu_started == 1)
+        pthread_join(cpu_tid,(void**)&retval);
+
     // 释放申请的内存
     resource_free();
+    prinf_runtime_info();
     return 0;
 }
