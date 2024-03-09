@@ -103,28 +103,28 @@ static MCheck addr_check(uint64_t addr, uint8_t byte_num, MemOpSrc op_src){
     // }
     if (addr >= DRAM_BASE && addr <= DRAM_END) {
         addr_check.dev_target = DRAM;
-        if ((addr + byte_num) > DRAM_END)
+        if ((addr + byte_num -1) > DRAM_END)
         {
-            addr_check.fault = 1;
+            addr_check.fault = 2;
         }
     }
     else if (addr >= KBD_BASE && addr <= KBD_END)
     {
         addr_check.dev_target = KBD;
-        if ((addr + byte_num) > KBD_END) {
-            addr_check.fault = 1;
+        if ((addr + byte_num -1) > KBD_END) {
+            addr_check.fault = 2;
         }
         if (misalign_access_check(addr,byte_num))
         {
-            addr_check.fault = 1;
+            addr_check.fault = 3;
         }
 
     }
     else if (addr >= SCR_BASE && addr <= SCR_END)
     {
         addr_check.dev_target = SCR;
-        if ((addr + byte_num) > SCR_END) {
-            addr_check.fault = 1;
+        if ((addr + byte_num -1) > SCR_END) {
+            addr_check.fault = 2;
         }
         // if (misalign_access_check(addr,byte_num))
         // {
@@ -134,17 +134,17 @@ static MCheck addr_check(uint64_t addr, uint8_t byte_num, MemOpSrc op_src){
     else if (addr >= INTCTRL_BASE && addr <= INTCTRL_END)
     {
         addr_check.dev_target = INTCTRL;
-        if ((addr + byte_num) > INTCTRL_END) {
-            addr_check.fault = 1;
+        if ((addr + byte_num -1) > INTCTRL_END) {
+            addr_check.fault = 2;
         }
         if (misalign_access_check(addr,byte_num))
         {
-            addr_check.fault = 1;
+            addr_check.fault = 3;
         }
     }
     else {
         // 未知的设备
-        addr_check.fault = 1;
+        addr_check.fault = 4;
     }
 
 
@@ -220,8 +220,11 @@ int read_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_bu
     MCheck mem_check = addr_check(addr,byte_num,op_src);
     if (mem_check.across_page)
         assert((mem_check.byte_num + mem_check.across_offset) == byte_num);
-    if (byte_num == 0 || mem_check.fault==1)
+
+    if (byte_num == 0)
         return 1;
+    if (mem_check.fault)
+        return (int)mem_check.fault;
 
     // 总线 DeMux
     if (mem_check.dev_target == DRAM) {
@@ -250,8 +253,11 @@ int write_data(uint64_t addr, uint8_t byte_num, MemOpSrc op_src, uint8_t *data_b
     MCheck mem_check = addr_check(addr,byte_num,op_src);
     if (mem_check.across_page)
         assert((mem_check.byte_num + mem_check.across_offset) == byte_num);
-    if (byte_num == 0 || mem_check.fault==1)
+
+    if (byte_num == 0)
         return 1;
+    if (mem_check.fault)
+        return (int)mem_check.fault;
 
     // 总线 DeMux
     if (mem_check.dev_target == DRAM) {

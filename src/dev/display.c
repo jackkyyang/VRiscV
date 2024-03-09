@@ -147,7 +147,7 @@ static gboolean do_timer( gpointer* null)
     // 如果存在,且没有拉高中断和设备锁，则说明软件没有查看到该事件
     // 此时需要帮助键盘拉高中断, 将备份区内容移动到缓冲区中
     uint8_t* kbd_buf_start;
-    uint32_t* kbd_wr_base;
+    uint32_t* kbd_wr_ptr;
     if (kbd_queue_num > 0)
     {
         int get_kbd_int_mutex = pthread_mutex_trylock(thread_param.kbd_int_mutex);
@@ -158,11 +158,11 @@ static gboolean do_timer( gpointer* null)
                 kbd_buf_h->kbd_buf_lock == 0 )
             {
                 kbd_buf_start = thread_param.kbd_base + sizeof(KeyBoardBufferH);
-                kbd_wr_base  = (uint32_t*)(kbd_buf_start + kbd_buf_h->kbd_data_num);
+                kbd_wr_ptr  = (uint32_t*)(kbd_buf_start + sizeof(uint32_t) * kbd_buf_h->kbd_data_num);
                 // 先处理备份缓冲区内的数据
                 for (uint32_t i = 0; i < kbd_queue_num; i++)
                 {
-                    kbd_wr_base[i] = kbd_queue[i];
+                    kbd_wr_ptr[i] = kbd_queue[i];
                     kbd_buf_h->kbd_data_num +=1;
                 }
                 kbd_queue_num = 0;
