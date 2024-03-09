@@ -130,3 +130,8 @@ uint64_t cpu_run(uint64_t TIME_OUT,uint64_t entry_addr,uint8_t self_test,FILE* t
     }
     return iid;
 }
+
+uint64_t get_iid()
+{
+    return iid;
+}
